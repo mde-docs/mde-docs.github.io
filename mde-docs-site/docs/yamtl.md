@@ -2,9 +2,6 @@
 
 Yet Another Model Transformation Language (YAMTL) is an expressive model-to-model transformation language that is offered as an internal domain-specific language (DSL) of Java/Xtend. YAMTL was found to be the fastest incremental model transformation tool, in general, for dealing with complex transformations between AADL models according to independent industrial case study. YAMTL is available as an IDE-agnostic Java dependency that augments the Java ecosystem with model analysis and model transformation capabilities that are not yet available in the latest version of Java. YAMTL transformations can be developed, debugged and analysed using the preferred Java IDE of choice and they can build upon existing Java dependencies in order to automate complex tasks. YAMTL operates on models defined with the Eclipse Modeling Framework.
 
-Benefits of using YAMTL:
-- 
-
 
 ## Installation
 
@@ -94,7 +91,7 @@ Make sure the workspace is using **JDK 17 or higher**.
 
     ![JDK setting in VSCode](assets/images/jdk-vscode.png)
 
-After you have imported the example project into the workspace, click on the Gradle icon in the left sidebar. Then perform ``Tasks →  build → clean``. Do ``Tasks → build → build`` to build the entire Gradle project (it also runs the ``ReverseLinkedListTest.groovy`` file). 
+After you have imported the example project into the workspace, click on the Gradle icon in the left sidebar. Then perform ``Tasks →  build → clean``. Do ``Tasks → build → build`` to build the entire Gradle project (it also runs the ``ReverseLinkedListTest.groovy`` file).
 
 ![Run Gradle clean and build in VSCode](assets/images/gradle-build-vscode.gif)
 

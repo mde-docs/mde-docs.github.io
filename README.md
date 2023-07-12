@@ -4,7 +4,9 @@ MDE docs website uses [Material for MkDocs](https://squidfunk.github.io/mkdocs-m
 
 ```pip install mkdocs-material```
 
-Head over to the ``mde-docs-site`` (main directory) and start editing the webpages found in the ``docs`` folder. To live preview the edits do (in the main directory):
+**For WINDOWS USERS: Make sure to define the mkdocs path in the environment variable path as it is necessary.**
+
+Head over to the ``mde-docs-site`` folder which is the **main directory** of this project. You can start editing the webpages found in the ``docs`` folder. To live preview the edits, use terminal to navigate to the project's main directory and run:
 
 ```mkdocs serve```
 
