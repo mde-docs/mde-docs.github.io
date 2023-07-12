@@ -1,0 +1,15 @@
+site_name: Model Driven Engineering (MDE) documentation
+
+theme:
+  name: material
+  palette: 
+    scheme: default
+    primary: blue grey
+    accent: amber
+
+markdown_extensions: 
+  - attr_list
+  - md_in_html
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
