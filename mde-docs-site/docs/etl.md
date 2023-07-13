@@ -1,6 +1,6 @@
 # ETL
 
-The Epsilon Transformation Language (ETL) aims to provide model-to-model tranforrmation capabilities to Epsilon. More specifically, ETL can be used to transform an arbitrary number of input models into an arbitrary number of output models of different modelling languages and technologies in a rule-based and modular manner. 
+The Epsilon Transformation Language (ETL) is used to perform model-to-model transformations with Epsilon. ETL can be used to transform a random number of input models into a random number of output models of different modelling languages and technologies in a rule-based and modular manner. 
 
 An ETL model-to-model transformation project (see image below) requires a source model and metamodel, target metamodel, an ETL program that contains the rules and transformations between the source and target model, and a build file which loads all EMF models and runs the ETL program to generate the target model (an XMI file).
 <br/><br/>
@@ -12,7 +12,7 @@ An ETL model-to-model transformation project (see image below) requires a source
 
 ## Installation
 
-In order to use ETL, you need to install [Epsilon on Eclipse](epsilon.md).
+To use ETL, you just need to install [Epsilon on Eclipse](epsilon.md).
 
 ## ETL example
 
@@ -31,7 +31,7 @@ To demonstrate the ETL capabilities, let's look at a simple example that reverse
 </figure>
 <br/><br/>
 
-There are many ways to interact with ETL: an online [Epsilon Playground](https://eclipse.dev/epsilon/playground/?d1b7114c), using Ant in Eclipse and using Java.
+There are many ways to interact with ETL: an online [Epsilon Playground](https://eclipse.dev/epsilon/playground/?d1b7114c), using Ant (Eclipse) or using Java.
 
 ### **Online playground**
 
@@ -52,9 +52,9 @@ Then, right click on ``build.xml`` and choose ``Run as → Ant Build`` to build 
 ![Ant Walkthrough](assets/images/ant-walkthrough.gif)
 <br/><br/>
 
-### **Java**
+### **Java (Gradle)**
 
-[Click here](assets/downloads/playground-example-java-gradle.zip) to download the linked list Java project.
+[Download](assets/downloads/playground-example-java-gradle.zip) the linked list Java project.
 
 Unzip the project and import it into an IDE of your choice (e.g. Eclipse, IntelliJ, VSCode). Make sure the IDE uses **JDK 17 or higher**.
 

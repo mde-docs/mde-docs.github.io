@@ -6,6 +6,8 @@ theme:
     scheme: default
     primary: blue grey
     accent: amber
+  features:
+    - content.code.copy
 
 markdown_extensions: 
   - attr_list
