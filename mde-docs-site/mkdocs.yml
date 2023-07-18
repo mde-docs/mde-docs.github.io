@@ -1,13 +1,34 @@
-site_name: Model Driven Engineering (MDE) documentation
+site_name: MDE Docs
 
 theme:
   name: material
+  logo: assets/site-files/mde-logo.png
+  favicon: assets/site-files/favicon.ico
   palette: 
-    scheme: default
-    primary: blue grey
-    accent: amber
+    - scheme: default
+      primary: light blue
+      accent: amber
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to dark mode
+    
+    - scheme: slate
+      primary: light blue
+      accent: amber
+      toggle:
+        icon: material/lightbulb
+        name: Switch to light mode
+
   features:
     - content.code.copy
+
+plugins:
+  - git-revision-date-localized:
+      enable_creation_date: true
+      fallback_to_build_date: true
+  - search:
+      lang: en
+
 
 markdown_extensions: 
   - attr_list
