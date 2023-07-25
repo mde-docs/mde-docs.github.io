@@ -24,7 +24,7 @@ theme:
 
 plugins:
   - git-revision-date-localized:
-      enable_creation_date: true
+      strict: false
       fallback_to_build_date: true
   - search:
       lang: en
@@ -35,4 +35,8 @@ markdown_extensions:
   - md_in_html
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
