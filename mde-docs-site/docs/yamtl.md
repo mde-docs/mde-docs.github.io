@@ -76,4 +76,4 @@ The congifurations are completed! Check out the [YAMTL examples](#yamtl-example)
 
 ## Examples
 
-* [Linked list reversal](examples/linked-list-reversal-example.md) project reverses a linked list data structure originally stored in XMI format (source model). YAMTL transformation generates an ``output.xmi`` containing the target model. Both source and target metamodels are created using EMF.
+* [Linked list reversal](examples/linked-list-reversal-example.md) project reverses a linked list data structure originally stored in XMI format (source model). YAMTL transformation generates an ``outputList.xmi`` containing the target model. Both source and target metamodels are created using the same ECore file since the data structure remains the same after the transformation. A Gradle test runs a Groovy script that loads the input model, executes the transformation and saves the output model.

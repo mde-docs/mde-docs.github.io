@@ -29,6 +29,14 @@ plugins:
   - search:
       lang: en
 
+nav:
+  - Home: 'index.md'
+  - Model Transformation Languages:
+    - ETL: 'etl.md'
+    - YAMTL: 'yamtl.md'
+  - Examples:
+    - Linked List Reversal: 'examples/linked-list-reversal-example.md'
+
 
 markdown_extensions: 
   - attr_list

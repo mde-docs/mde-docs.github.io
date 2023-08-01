@@ -158,9 +158,9 @@ After all rules have been executed, the ``post`` blocks are executed in the orde
 
 Resolving source elements is a common task in the execution of a rule and this has been automated by ETL. This also helps in reducing coupling between different rules and keeps the mappings between source and target elements clear. ETL contains ``equivalent()`` and ``equivalents()`` built-in operations that automatically resolve source elements to the corresponding target elements.
 
-**equivalents()**
+``equivalents()`` *operation:*
 
-``equivalents()`` operation has different behaviours when applied to a single source element or a collection of elements. When applied on a single element, the operation inspects the transformation trace (see figure below) and invokes rules that are applicable to calculate the target element. When the operation is applied on a collection, a ``Bag`` containing Bags which contain the corresponding target elements of the original source elements is returned. Optionally, `equivalents()` operation can be invoked with a number of rule names as parameters to return equivalents created by specific rules. The execution of this operation also differs from the 'Execution Scheduling' discussed before, because ``equivalents()`` operation invokes both lazy and non-lazy rules.
+``equivalents()`` operation has different behaviours when applied to a single source element or a collection of elements. When applied on a single element, the operation inspects the transformation trace (see figure below) and invokes applicable rules (if necessary) to calculate the target element. When the operation is applied on a collection, a ``Bag`` containing ``Bag``s which contain the corresponding target elements of the original source elements is returned. Optionally, `equivalents()` operation can be invoked with a number of rule names as parameters to return equivalents created by specific rules. The execution of this operation also differs from the 'Execution Scheduling' discussed before, because ``equivalents()`` operation invokes both lazy and non-lazy rules.
 
 The ordering of the ``equivalents()`` operations is sequential and runs in the order of the rules defined. However, this is not the case when a rule is declared ``@primary`` in which case the results of that rule will precede all of the other rules.
 
@@ -184,9 +184,26 @@ TransformationTrace -- Transformation: transformations *
 Transformation -- TransformRule: rule
 ```
 
-**equivalent()**
+``equivalent()`` *operation:*
 
 The `equivalent()` operation also has different behaviours when applied to a single source element or a collection. When the operation is applied to a single element only the first element of the result that would have been returned by the ``equivalents()`` operation is returned. When applied on a collection, the operation returns a flattened collection. Optionally, ``equivalent()`` operation can be invoked with or without parameters.
+
+!!! info "Transformation trace persistance"
+    ETL does not provide built-in support for persisting the transformation trace. If you want to access it, you can do so through ``System.context.transformationTrace`` and persists parts of the trace in a format of choice e.g. in a ``post`` block.
+
+#### ETL override on EOL Special Assignment Operator
+
+Resolving equivalent(s) or source model elements is quite common in model transformation. However, the ETL syntax for equivalent(s) operations is verbose. So, to improve readability of transformation scripts, ETL overrides the semantics of the EOL ``SpecialAssignmentStatement`` (which is ``::=`` in concrete syntax) to set the field on the left-hand side to the ``equivalent`` of the element on the right-hand side as calculated using the ``equivalent()`` operation discussed above. This custom assignment behaviour is meant to simply replace the ``equivalent()`` method with ``::=`` instead. The snippets below show how its done (don't worry about the terminology, just compare the syntax).
+
+*Equivalent Operation Snippet:*
+```
+edge.target = t.parent.equivalent();
+```
+
+*Special Assignment Operator Snippet:*
+```
+edge.target ::= t.parent;
+```
 
 #### Interactive Transformations
 
@@ -210,129 +227,6 @@ rule Tree2Node
 }
 ```
 
+## Examples
 
-
-## Simple Tutorial
-
-To demonstrate the ETL capabilities, let's look at a simple example that reverses a linked list using ETL. A linked list with 2 nodes (N1 and N2) is reversed through model transformation.
-
-**Source Model**
-<figure markdown>
-  ![Linked list in the source model](assets/images/linked-list-before.png){ width="300" }
-  <figcaption>Linked list BEFORE transformation</figcaption>
-</figure>
-
-**Target Model**
-<figure markdown>
-  ![Linked list in the target model](assets/images/linked-list-after.png){ width="300" }
-  <figcaption>Linked list AFTER transformation</figcaption>
-</figure>
-<br/><br/>
-
-### Transformation (ETL)
-
-There are 2 aspects of the linked list which are changed from the source model to the target model (thus requiring two rules): 
-
-1. The head of the linked list is swapped with its tail. 
-2. The nodes are reversed i.e. pointing to the previous node instead of the next one.
-
-
-**First, the linked list's head is reversed:**
-
-``` linenums="1"
-rule LinkedList2LinkedList 
-    transform s : Source!LinkedList
-    to t : Target!LinkedList {
-        
-    t.nodes ::= s.nodes;
-    t.head ::= Source!Node.all.selectOne(n|n.next == null);
-}
-```
-
-Let's have a look at each line of code to understand ETL logic and semantics:
-
-In line 1, ``rule`` declares a transformation rule with a unique name 'LinkedList2LinkedList'. <br> 
-In line 2, ``transform`` keyword indicates the source parameter we want to transform in this rule. Thus, a source parameter name 's' and a source parameter type 'Source!LinkedList' (the source metamodel's LinkedList class is being referenced here). <br> 
-In line 3, similar to the previous line's format, `to` keyword is followed by the target parameter name 't' and target parameter type 'Target!LinkedList'. The target element properties are being configured here. The open curly brace ({) indicates the start of the rule's ``body``.<br>
-In line 5, the target element's nodes are assigned using the EOL SpecialAssignment operator (::=) to be the equivalent of the source element's nodes. Please note that ::= is the same as an ``equivalent()`` operation. <br>
-In line 6, the target element's head ``t.head`` is assigned the equivalent value of a node from the source model that points to ``null`` i.e. it is the last node.<br>
-In line 7, the close curly brace (}) indicates the end of the ``body`` and the dedent means the end of the transformation rule.
-
-**Second, the nodes are reversed:**
-
-``` linenums="1"
-rule Node2Node
-    transform s : Source!Node
-    to t : Target!Node {
-    
-    t.name = s.name;
-    t.next ::= Source!Node.all.selectOne(n|n.next = s);
-}
-```
-
-In this rule, the source and target parameter types are also the same. Remember, the linked list is only meant to be reversed hence the structural properties of the linked list remain unchanged. In the ``transform`` statement, a source parameter 's' of the type 'Source!Node' (Node class in the source metamodel) is transformed ``to`` the target parameter 't' of the type 'Target!Node' (same Node class definition as in the source metamodel). The target element is assigned the same name as the source element. SpecialAssignment operator (::=) is not used here because ``name`` is a string attribute of a ``Node`` class and not a reference. The target element's ``next`` property is assigned the equivalent value of a node from the source model whos ``next`` value is the source node element 's'.
-
-The example project also includes other important files: Source model (.xmi), Source metamodel (.emf) and a Target metamodel (.emf) which are listed below.
-
-### Source Model
-
-```
-<?nsuri linkedlist?>
-<linkedlist head="N1">
-    <node label="N1" next="N2"/>
-    <node label="N2"/>
-</linkedlist>
-```
-
-### Source and Target Metamodel
-
-```
-@namespace(uri="linkedlist", prefix="")
-package linkedlist;
-
-class LinkedList {
-	ref Node head;
-	val Node[*] nodes;
-}
-
-class Node {
-    attr String name;
-    ref Node next;
-}
-```
-
-**Note:** Usually source and target metamodels may not be the same. In this linked list reversal example, the data structure did not need to be changed but the property values.
-
-
-## Development Platforms
-
-There are many ways to interact with ETL: an online [Epsilon Playground](https://eclipse.dev/epsilon/playground/?d1b7114c), using Ant (Eclipse) or using Java. Try the linked list reversal example project using any of the three options.
-
-### **Online playground**
-
-!!! example "Try ETL online"
-    You can run and fiddle with an ETL transformation that transforms a linked list into its reverse version in the [online Epsilon Playground](https://eclipse.dev/epsilon/playground/?d1b7114c).
-<br/><br/>
-
-### **Apache Ant (Eclipse)**
-
-[Click here](assets/downloads/playground-example.zip) to download the linked list example project or head over to the [online Epsilon Playground](https://eclipse.dev/epsilon/playground/?d1b7114c) and select ```Download → Ant (Eclipse)``` as shown below
-
-![Ant Download](assets/images/ant-download.gif)
-
-Next step is to import the project in Eclipse. Once the ZIP file is downloaded, open your Eclipse IDE and do ```File → Import → Existing Projects into Workspace → Select archive file → Finish```. 
-
-Then, right click on ``build.xml`` and choose ``Run as → Ant Build`` to build the ETL project and generate the target model. Examine the generated model (target.xmi) to discover the linked list has been reversed! 
-
-![Ant Walkthrough](assets/images/ant-walkthrough.gif)
-<br/><br/>
-
-### **Java (Gradle)**
-
-[Download](assets/downloads/playground-example-java-gradle.zip) the linked list Java project.
-
-Unzip the project and import it into an IDE of your choice (e.g. Eclipse, IntelliJ, VSCode). Make sure the IDE uses **JDK 17 or higher**.
-
-Run ``src/main/java/org/eclipse/epsilon/examples/Example.java`` to generate ``target.xmi`` containing the target model. The target model is the reversed linked list.
-
-To run ``Example.java`` in VSCode, make sure the Gradle extension is enabled and click on the Gradle icon in the sidebar then do ``playground-example → Tasks → application → run``.
+* [Linked list reversal](examples/linked-list-reversal-example.md) project reverses a linked list data structure originally stored in XMI format (source model). ETL transformation generates an ``target.xmi`` containing the target model. Both source and target metamodels are created using EMF.
