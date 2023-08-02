@@ -1,5 +1,6 @@
 # Linked List Reversal - ETL Implementation
 
+## ETL Transformation
 To demonstrate the ETL capabilities, let's look at a simple example that reverses a linked list using ETL. A linked list with 2 nodes (N1 and N2) is reversed through model transformation.
 
 **Source Model**
@@ -15,7 +16,7 @@ To demonstrate the ETL capabilities, let's look at a simple example that reverse
 </figure>
 <br/><br/>
 
-## ETL Transformation
+### ETL Definition
 
 There are 2 aspects of the linked list which are changed from the source model to the target model (thus requiring two rules): 
 
@@ -60,16 +61,6 @@ In this rule, the source and target parameter types are also the same. Remember,
 
 The example project also includes other important files: Source model (.xmi), Source metamodel (.emf) and a Target metamodel (.emf) which are listed below.
 
-### Source Model
-
-```
-<?nsuri linkedlist?>
-<linkedlist head="N1">
-    <node label="N1" next="N2"/>
-    <node label="N2"/>
-</linkedlist>
-```
-
 ### Source and Target Metamodel
 
 ```
@@ -88,6 +79,32 @@ class Node {
 ```
 
 **Note:** Usually source and target metamodels may not be the same. In this linked list reversal example, the data structure did not need to be changed but the property values.
+
+### Source Model
+
+```
+<?nsuri linkedlist?>
+<linkedlist head="N1">
+    <node label="N1" next="N2"/>
+    <node label="N2"/>
+</linkedlist>
+```
+
+### Target Model
+
+```
+<?xml version="1.0" encoding="ASCII"?>
+<LinkedList
+  xmi:version="2.0"
+  xmlns:xmi="http://www.omg.org/XMI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="linkedlist"
+  xsi:schemaLocation="linkedlist target.emf"
+  head="//@nodes.1">
+  <nodes name="N1" />
+  <nodes name="N2" next="//@nodes.0" />
+</LinkedList>
+```
 
 ## Development Platforms
 
