@@ -127,6 +127,44 @@ Finally, build the project to install the dependencies.
 
 You are now ready to use your YAMTL project! Check out the [examples](#examples) section to learn model transformations of varying difficulties using YAMTL.
 
+## Concrete Syntax
+
+The basic format of a YAMTL definition based on a Groovy script is as follows:
+```
+rule('<name>')
+    .in('<sourceObjectName>', <sourceObjectType>)
+    .out('<targetObjectName>', <targetObjectType>, {
+        // Action statements 
+        actions+
+    })*
+```
+**Note: <> is meant to show user-definable fields and is not part of the actual syntax**
+
+YAMTL is as expressive as ATL so it also has a lot of optional operations. These options provide a more thorough syntax for the language.
+
+```
+rule('<name>')[inheritsFrom(<ruleNameList>)]? [.abstract]? [.lazy | .uniqueLazy]? [.transient]?
+    {
+        .in('<sourceObjectName>', <sourceObjectType>)
+        [.with(<nameList>)]?
+        [(.filter(<FILTER>) | .derivedWith(<QUERY>))]?
+    }+
+    [.filter(<FILTER>)]?
+    [.using(<variableName>, <QUERY>)]*
+    {
+        .out('<targetObjectName>', <targetObjectType>, {
+        // Action statements 
+        actions+
+        })
+        [.overriding()]?
+        [.drop]
+    }+
+    [.endsWith(<ACTION>)]?
+    [.priority(P)]?
+```
+**Note: <> is meant to show user-definable fields, []? means optional, []* means operation can occur 0 or more times, {}+ means operation can occur 1 or more time. These symbols are not part of the actual YAMTL syntax. Remember, {} is still part of the syntax.**
+
+
 ## Examples
 
 * [Linked list reversal](examples/linked-list-reversal-example.md) project reverses a linked list data structure originally stored in XMI format (source model). YAMTL transformation generates an ``outputList.xmi`` containing the target model. Both source and target metamodels are created using the same ECore file since the data structure remains the same after the transformation. A Gradle test runs a Groovy script that loads the input model, executes the transformation and saves the output model.
