@@ -182,3 +182,9 @@ After you have imported the example project into the workspace, click on the Gra
 ![Run Gradle clean and build in VSCode](../assets/images/gradle-build-vscode.gif)
 
 Once the project is successfully built, an ``outputList.xmi`` will be generated in the ``model`` directory. Examine this file and notice if the linked list has been reversed.
+
+## References
+
+* [YAMTL Syntax](https://dl.acm.org/doi/10.1145/3239372.3239386)
+* [YAMTL Support](https://link.springer.com/article/10.1007/s10009-020-00583-y)
+* [YAMTL Homepage](https://arturboronat.github.io/yamtl/)
