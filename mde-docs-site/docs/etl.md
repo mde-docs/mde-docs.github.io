@@ -230,3 +230,5 @@ rule Tree2Node
 ## Examples
 
 * [Linked list reversal](examples/linked-list-reversal-example.md) project reverses a linked list data structure originally stored in XMI format (source model). ETL transformation generates an ``target.xmi`` containing the target model. Both source and target metamodels are created using EMF.
+
+* [Flowchart2HTML]() online playground example is a culmination of small yet expressive ETL scripts that transform elements from a Flowchart model to HTML elements. Important and easily understandable demos on ``@greedy``, ``@lazy``, ``@primary``, ``equivalent()``, one source to multiple targets and inheritance concepts have been covered in this project.

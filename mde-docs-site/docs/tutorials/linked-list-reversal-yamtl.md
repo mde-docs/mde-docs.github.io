@@ -26,7 +26,7 @@ There are 2 aspects of the linked list which are changed from the source model t
 
 The YAMTL definition is in a Groovy script as follows: 
 
-``` linenums="1"
+``` linenums="1" title="Snippet from ReverseLinkedList.groovy"
 class ReverseLinkedList extends YAMTLModule {
 	public ReverseLinkedList(EPackage llPk) {
 		YAMTLGroovyExtensions_dynamicEMF.init(this)
@@ -69,60 +69,50 @@ In Line 18, all ``Node`` objects in the source model are queried to find a ``Nod
 
 Besides the actual transformation definition, you will also need a Groovy test script that automates the entire transformation process. Here, the relevant project files are configured and test assertions are implemented. Check out the test script for the linked list reversal example below:
 
-```
-class ReverseLinkedListTest extends YAMTLModule {
-	final BASE_PATH = 'model'
-	
-	@Test
-	def void testLinkedList() {
-		// model transformation execution example
-		def metamodel = YAMTLModule.loadMetamodel(BASE_PATH + '/LinkedList.ecore') as EPackage
-		def xform = new ReverseLinkedList(metamodel)
-		xform.loadInputModels(['in': BASE_PATH + '/inputList.xmi'])
-		xform.execute()
-		xform.saveOutputModels(['out': BASE_PATH + '/outputList.xmi'])
-
-		// test assertion
-		def actualModel = xform.getOutputModel('out')
-		EMFComparator comparator = new EMFComparator();
-		def expectedResource = xform.loadModel(BASE_PATH + '/expectedOutput.xmi', false)
-		assertTrue( comparator.equals(expectedResource.getContents(), actualModel.getContents()) );
-		
-	}
-
+``` linenums="1" title="Snippet from ReverseLinkedListTest.groovy"
+@Test
+def void testLinkedList() {
+	// model transformation execution example
+	def metamodel = YAMTLModule.loadMetamodel(BASE_PATH + '/LinkedList.ecore') as EPackage
+	def xform = new ReverseLinkedList(metamodel)
+	xform.loadInputModels(['in': BASE_PATH + '/inputList.xmi'])
+	xform.execute()
+	xform.saveOutputModels(['out': BASE_PATH + '/outputList.xmi'])
 }
 ```
 
-The transformation is executed through a Gradle build run which also runs this test script. In the code snippet above, ``testLinkedList()`` method contains the code for model transformation execution and tests assertion. First, the ``metamodel`` is loaded from a ``.ecore`` file as an ``EPackage``. Then, ``xform`` initialises a new ``ReverseLinkedList`` transformation definition and passes the metamodel as an ``EPackage`` (``llPk`` was a reference to the metamodel). The input parameter within the YAMTL definition script is set to be the relative location to the ``inputList.xmi`` file which contains the source model. This source model is loaded into the model transformation, the transformation rules are executed and the output model returned from ``ReverseLinkedList()`` is saved at a defined location through the output parameter. After the transformation is completed, some tests can be run to check the contents of the generated target model. The output model is compared against an expected output ``expectedOutput.xmi`` using ``EMFComparator``. An assertion is set to ensure that the contents of the actual model exactly match the contents of the expected model.
+The transformation is executed through a Gradle build run which also runs this test script. In the code snippet above, ``testLinkedList()`` method contains the code for model transformation execution and tests assertion. First, the ``metamodel`` is loaded from a ``.ecore`` file as an ``EPackage``. Then, ``xform`` initialises a new ``ReverseLinkedList`` transformation definition and passes the metamodel as an ``EPackage`` (``llPk`` was a reference to the metamodel). The input parameter within the YAMTL definition script is set to be the relative location to the ``inputList.xmi`` file which contains the source model. This source model is loaded into the model transformation, the transformation rules are executed and the output model returned from ``ReverseLinkedList()`` is saved at a defined location through the output parameter. After the transformation is completed, some tests can be run to check the contents of the generated target model. The output model is compared against an expected output ``expectedOutput.xmi`` using ``EMFComparator``.
 
 
 ### Source and Target Metamodel
 
+``` title="LinkedList.emf"
+@namespace(uri="linkedlist", prefix="")
+package linkedlist;
+
+class LinkedList {
+	ref Node head;
+	val Node[*] nodes;
+}
+
+class Node {
+    attr String name;
+    ref Node next;
+}
 ```
-<?xml version="1.0" encoding="UTF-8"?>
-<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="linkedlist"
-	nsURI="linkedlist" nsPrefix="">
-	<eClassifiers xsi:type="ecore:EClass" name="LinkedList">
-		<eStructuralFeatures xsi:type="ecore:EReference" name="head"
-			eType="#//Node" />
-		<eStructuralFeatures xsi:type="ecore:EReference" name="nodes"
-			upperBound="-1"
-			eType="#//Node" containment="true" />
-	</eClassifiers>
-	<eClassifiers xsi:type="ecore:EClass" name="Node">
-		<eStructuralFeatures xsi:type="ecore:EAttribute" name="name"
-			eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString" />
-		<eStructuralFeatures xsi:type="ecore:EReference" name="next"
-			eType="#//Node" />
-	</eClassifiers>
-</ecore:EPackage>
-```
+
+The Emfatic textual syntax is used to define the metamodel. The corresponding ECore file "LinkedList.ecore" can then be generated if the Emfatic software package is installed.
 
 ### Source Model
 
-```
+**Abstract Representation**
+<figure markdown>
+  ![Linked list in the source model](../assets/images/linked-list-before.png){ width="300" }
+  <figcaption>Linked list BEFORE transformation</figcaption>
+</figure>
+
+**Code implementation**
+``` title="inputList.xmi"
 <?xml version="1.0" encoding="UTF-8"?>
 <LinkedList
 	xmi:version="2.0"
@@ -135,9 +125,18 @@ The transformation is executed through a Gradle build run which also runs this t
 </LinkedList>
 ```
 
+The source model conforms to the source metamodel (``LinkedList.emf``). The Groovy test script loads the source model, applies the transformation and saves the target model generated.
+
 ### Target Model
 
-```
+**Abstract Representation**
+<figure markdown>
+  ![Linked list in the target model](../assets/images/linked-list-after.png){ width="300" }
+  <figcaption>Linked list AFTER transformation</figcaption>
+</figure>
+
+**Code Implementation**
+``` title="outputList.xmi"
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <LinkedList
   xmi:version="2.0"
@@ -148,6 +147,8 @@ The transformation is executed through a Gradle build run which also runs this t
   <nodes name="N2" next="//@nodes.0" />
 </LinkedList>
 ```
+
+This is the output file you should expect when you correctly run the YAMTL program.
 
 ## Development Platforms
 

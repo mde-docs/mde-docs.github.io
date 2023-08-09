@@ -108,7 +108,7 @@ dependencies {
     implementation 'org.eclipse.xtend:org.eclipse.xtend.core:${xtendVersion}'
 
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-aop
-    implementation 'org.springframework.boot:spring-boot-starter-aop:${sbsAopVersion}'
+    implementation 'org.springframework.boot:spring-boot-starter-aop:${springAopVersion}'
 }
 ```
 
@@ -121,7 +121,7 @@ The latest versions for the dependencies defined in the ``build.gradle`` file ca
 * Find the latest ``${ecoreXmiVersion}`` on [Maven Central](https://mvnrepository.com/artifact/org.eclipse.emf/ecore-xmi)
 * Find the latest ``${ecoreChangeVersion}`` on [Maven Central](https://mvnrepository.com/artifact/org.eclipse.emf/org.eclipse.emf.ecore.change)
 * Find the latest ``${xtendVersion}`` on [Maven Central](https://mvnrepository.com/artifact/org.eclipse.xtend/org.eclipse.xtend.core)
-* Find the latest ``${sbsAopVersion}`` on [Maven Central](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-aop)
+* Find the latest ``${springAopVersion}`` on [Maven Central](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-aop)
 
 Finally, build the project to install the dependencies. 
 
@@ -133,9 +133,9 @@ The basic format of a YAMTL definition based on a Groovy script is as follows:
 ```
 rule('<name>')
     .in('<sourceObjectName>', <sourceObjectType>)
+    .filter(<FILTER>)?
     .out('<targetObjectName>', <targetObjectType>, {
-        // Action statements 
-        actions+
+        //Action block
     })*
 ```
 **Note: <> is meant to show user-definable fields and is not part of the actual syntax**
@@ -143,7 +143,7 @@ rule('<name>')
 YAMTL is as expressive as ATL so it also has a lot of optional operations. These options provide a more thorough syntax for the language.
 
 ```
-rule('<name>')[inheritsFrom(<ruleNameList>)]? [.abstract]? [.lazy | .uniqueLazy]? [.transient]?
+rule('<name>')[.inheritsFrom(<ruleNameList>)]? [.abstract]? [.lazy | .uniqueLazy]? [.transient]?
     {
         .in('<sourceObjectName>', <sourceObjectType>)
         [.with(<nameList>)]?
@@ -153,8 +153,7 @@ rule('<name>')[inheritsFrom(<ruleNameList>)]? [.abstract]? [.lazy | .uniqueLazy]
     [.using(<variableName>, <QUERY>)]*
     {
         .out('<targetObjectName>', <targetObjectType>, {
-        // Action statements 
-        actions+
+        // Action block
         })
         [.overriding()]?
         [.drop]
@@ -164,7 +163,8 @@ rule('<name>')[inheritsFrom(<ruleNameList>)]? [.abstract]? [.lazy | .uniqueLazy]
 ```
 **Note: <> is meant to show user-definable fields, []? means optional, []* means operation can occur 0 or more times, {}+ means operation can occur 1 or more time. These symbols are not part of the actual YAMTL syntax. Remember, {} is still part of the syntax.**
 
+The rule is instantiated using ``rule('<name>')`` with a rule name in the parentheses and in single quotes. There are some optional parameters to customise the rule. ``.inheritsFrom(<ruleNameList>)`` is declared when the current rule inherits from a parent rule and ``ruleNameList`` is a comma separated list of strings. ``.abstract`` tag is used for abstract rules which cannot be matched automatically nor applied.
 
 ## Examples
 
-* [Linked list reversal](examples/linked-list-reversal-example.md) project reverses a linked list data structure originally stored in XMI format (source model). YAMTL transformation generates an ``outputList.xmi`` containing the target model. Both source and target metamodels are created using the same ECore file since the data structure remains the same after the transformation. A Gradle test runs a Groovy script that loads the input model, executes the transformation and saves the output model.
+* [Linked list reversal](examples/linked-list-reversal-example.md) example reverses a linked list data structure originally stored in XMI format (source model). YAMTL transformation generates an ``outputList.xmi`` containing the target model. Both source and target metamodels are created using the same ECore file since the data structure remains the same after the transformation. A Gradle test runs a Groovy script that loads the input model, executes the transformation and saves the output model.
