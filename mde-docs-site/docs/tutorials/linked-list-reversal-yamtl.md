@@ -67,21 +67,18 @@ In Line 18, all ``Node`` objects in the source model are queried to find a ``Nod
 
 ### Transformation Test Script
 
-Besides the actual transformation definition, you will also need a Groovy test script that automates the entire transformation process. Here, the relevant project files are configured and test assertions are implemented. Check out the test script for the linked list reversal example below:
+Besides the actual transformation definition, you will also need a Groovy test script that automates the entire transformation process. Here, the relevant project files are configured and test assertions are implemented. Check out a snippet from the test script for the linked list reversal example below:
 
 ``` linenums="1" title="Snippet from ReverseLinkedListTest.groovy"
-@Test
-def void testLinkedList() {
-	// model transformation execution example
-	def metamodel = YAMTLModule.loadMetamodel(BASE_PATH + '/LinkedList.ecore') as EPackage
-	def xform = new ReverseLinkedList(metamodel)
-	xform.loadInputModels(['in': BASE_PATH + '/inputList.xmi'])
-	xform.execute()
-	xform.saveOutputModels(['out': BASE_PATH + '/outputList.xmi'])
-}
+// model transformation execution example
+def metamodel = YAMTLModule.loadMetamodel(BASE_PATH + '/LinkedList.ecore') as EPackage
+def xform = new ReverseLinkedList(metamodel)
+xform.loadInputModels(['in': BASE_PATH + '/inputList.xmi'])
+xform.execute()
+xform.saveOutputModels(['out': BASE_PATH + '/outputList.xmi'])
 ```
 
-The transformation is executed through a Gradle build run which also runs this test script. In the code snippet above, ``testLinkedList()`` method contains the code for model transformation execution and tests assertion. First, the ``metamodel`` is loaded from a ``.ecore`` file as an ``EPackage``. Then, ``xform`` initialises a new ``ReverseLinkedList`` transformation definition and passes the metamodel as an ``EPackage`` (``llPk`` was a reference to the metamodel). The input parameter within the YAMTL definition script is set to be the relative location to the ``inputList.xmi`` file which contains the source model. This source model is loaded into the model transformation, the transformation rules are executed and the output model returned from ``ReverseLinkedList()`` is saved at a defined location through the output parameter. After the transformation is completed, some tests can be run to check the contents of the generated target model. The output model is compared against an expected output ``expectedOutput.xmi`` using ``EMFComparator``.
+The transformation is executed through a Gradle build run which also runs this test script. In the code snippet above, a groovy method contains the code for model transformation execution and tests assertion. First, the ``metamodel`` is loaded from a ``.ecore`` file as an ``EPackage``. Then, ``xform`` initialises a new ``ReverseLinkedList`` transformation definition and passes the metamodel as an ``EPackage`` (``llPk`` was a reference to the metamodel). The input parameter within the YAMTL definition script is set to be the relative location to the ``inputList.xmi`` file which contains the source model. This source model is loaded into the model transformation, the transformation rules are executed and the output model returned from ``ReverseLinkedList()`` is saved at a defined location through the output parameter. After the transformation is completed, some tests can be run to check the contents of the generated target model. The output model is compared against an expected output ``expectedOutput.xmi`` using ``EMFComparator``.
 
 
 ### Source and Target Metamodel
@@ -105,13 +102,13 @@ The Emfatic textual syntax is used to define the metamodel. The corresponding EC
 
 ### Source Model
 
-**Abstract Representation**
+**Graphical Concrete Syntax**
 <figure markdown>
   ![Linked list in the source model](../assets/images/linked-list-before.png){ width="300" }
   <figcaption>Linked list BEFORE transformation</figcaption>
 </figure>
 
-**Code implementation**
+**XMI serialization of the Abstract Syntax**
 ``` title="inputList.xmi"
 <?xml version="1.0" encoding="UTF-8"?>
 <LinkedList
@@ -129,13 +126,13 @@ The source model conforms to the source metamodel (``LinkedList.emf``). The Groo
 
 ### Target Model
 
-**Abstract Representation**
+**Graphical Concrete Syntax**
 <figure markdown>
   ![Linked list in the target model](../assets/images/linked-list-after.png){ width="300" }
   <figcaption>Linked list AFTER transformation</figcaption>
 </figure>
 
-**Code Implementation**
+**XMI serialization of the Abstract Syntax**
 ``` title="outputList.xmi"
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <LinkedList
@@ -187,5 +184,5 @@ Once the project is successfully built, an ``outputList.xmi`` will be generated 
 ## References
 
 * [YAMTL Syntax](https://dl.acm.org/doi/10.1145/3239372.3239386)
-* [YAMTL Support](https://link.springer.com/article/10.1007/s10009-020-00583-y)
-* [YAMTL Homepage](https://arturboronat.github.io/yamtl/)
+* [YAMTL Incremental Support](https://link.springer.com/article/10.1007/s10009-020-00583-y)
+* [YAMTL Original Documentation](https://arturboronat.github.io/yamtl/)
