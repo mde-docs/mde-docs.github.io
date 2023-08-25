@@ -22,7 +22,7 @@ Create and set up a YAMTL project (without models and metamodels) that is ready 
 
 ### Choosing an IDE
 
-To use YAMTL appropriately, an IDE must be properly configured. Let's check out the required configurations for some of the most popular IDEs: Eclipse, IntelliJ, and VSCode.
+To use YAMTL appropriately, an IDE must be properly configured. Let"s check out the required configurations for some of the most popular IDEs: Eclipse, IntelliJ, and VSCode.
 
 #### Eclipse
 
@@ -77,14 +77,14 @@ YAMTL uses Gradle as build automation tool and can be executed from Java-SE 17. 
 Add the Groovy plugin (at the top of the ``build.gradle`` file):
 ```
 plugins {
-    id 'groovy'
+    id "groovy"
 }
 ```
 
 Add the following repositories:
 ```
 repositories {
-	maven{ url 'https://github.com/yamtl/yamtl.github.io/raw/mvn-repo/mvn-repo/snapshot-repo' }
+	maven{ url "https://github.com/yamtl/yamtl.github.io/raw/mvn-repo/mvn-repo/snapshot-repo" }
 	mavenCentral()
 }
 ```
@@ -93,15 +93,15 @@ Then declare the dependencies (EMF dependencies are optional but since many meta
 ```
 dependencies {
     // YAMTL dependencies
-    implementation 'yamtl:yamtl:${yamtlVersion}'
+    implementation "yamtl:yamtl:${yamtlVersion}"
 
-    implementation 'org.apache.groovy:groovy-all:${groovyAllVersion}'
-    implementation 'org.eclipse.emf:org.eclipse.emf.ecore:${ecoreVersion}'
-    implementation 'org.eclipse.emf:org.eclipse.emf.ecore.xmi:${ecoreXmiVersion}'
-    implementation 'org.eclipse.emf:org.eclipse.emf.ecore.change:${ecoreChangeVersion}'
-    implementation 'org.eclipse.xtend:org.eclipse.xtend.core:${xtendVersion}'
-    implementation 'org.springframework.boot:spring-boot-starter-aop:${springAopVersion}'
-    implementation 'org.aspectj:org.aspectj:${aspectJVersion}'
+    implementation "org.apache.groovy:groovy-all:${groovyAllVersion}"
+    implementation "org.eclipse.emf:org.eclipse.emf.ecore:${ecoreVersion}"
+    implementation "org.eclipse.emf:org.eclipse.emf.ecore.xmi:${ecoreXmiVersion}"
+    implementation "org.eclipse.emf:org.eclipse.emf.ecore.change:${ecoreChangeVersion}"
+    implementation "org.eclipse.xtend:org.eclipse.xtend.core:${xtendVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-aop:${springAopVersion}"
+    implementation "org.aspectj:org.aspectj:${aspectJVersion}"
 }
 ```
 
@@ -129,7 +129,8 @@ A YAMTL model transformation is defined as a class that specializes the `YAMTLMo
     ```groovy
     class <name> extends YAMTLModule {
         public <name> (EPackage <pk1>, EPackage <pk2>) {
-            header().in(<domainName1>,<pk1>).out(<domainName2>,<pk2>)
+            YAMTLGroovyExtensions_dynamicEMF.init(this)
+            header().in(<in_domain_name1>,<pk1>).out(<in_domain_name2>,<pk2>)
             ruleStore([ /* rules here */ ])
             helperStore([  /* managed helpers here */ ])
         }
@@ -141,7 +142,7 @@ A YAMTL model transformation is defined as a class that specializes the `YAMTLMo
     ```xtend
     class <name> extends YAMTLModule {
         new(EPackage <pk1>, EPackage <pk2>) {
-            header().in(<domainName1>,<pk1>).out(<domainName2>,<pk2>)
+            header().in(<in_domain_name1>,<pk1>).out(<in_domain_name2>,<pk2>)
             ruleStore(#[ /* rules here */ ])
             helperStore(#[ /* managed helpers here */ ])
         }
@@ -153,7 +154,7 @@ A YAMTL model transformation is defined as a class that specializes the `YAMTLMo
     ```java
     public class <name> extends YAMTLModule {
         public <name>(EPackage <pk1>, EPackage <pk2>) {
-            header().in(<domainName1>,<pk1>).out(<domainName2>,<pk2>);
+            header().in(<in_domain_name1>,<pk1>).out(<in_domain_name2>,<pk2>);
             ruleStore(List.of( /* rules here */ ));
             helperStore(List.of( /* managed helpers here */ ));
         }
@@ -165,7 +166,7 @@ A YAMTL model transformation is defined as a class that specializes the `YAMTLMo
     ```kotlin
     class <name>(<pk1>: EPackage, <pk2>: EPackage) : YAMTLModule() {
         init {
-            header().`in`(<domainName1>,<pk1>).out(<domainName2>,<pk2>)
+            header().`in`(<in_domain_name1>,<pk1>).out(<in_domain_name2>,<pk2>)
             ruleStore(listOf( /* rules here */ ))
             helperStore(listOf( /* managed helpers here */ ))
         }
@@ -184,15 +185,15 @@ In the code above there are four important sections:
 The basic format of a YAMTL rule definition is as follows:
 
 ```
-rule('<name>')
-    .in('<sourceObjectName>', <sourceObjectType>)[.filter(<FILTER>)]?
-    .out('<targetObjectName>', <targetObjectType>, <ACTION>)
+rule("<name>")
+    .in("<in_object_name>", <in_object_type>)[.derivedWith(<QUERY>)]?[.filter(<FILTER>)]?
+    .out("<out_object_name>", <out_object_type>, <ACTION>)
 ```
-!!! note "Note"
+!!! info "Legend"
 
-    `<>` indicates user-definable expressions. Note that these are placeholders and not part of the actual YAMTL syntax. Camel case (e.g., `sourceObjectName`) usually denotes variable names and types, including lists of variable names. Upper case (e.g., `<FILTER>` or `<ACTION>`) represents lambda expressions, and they are written using the syntax of the host language. `[]?` means optional.
+    `<>` indicates user-definable expressions. Note that these are placeholders and not part of the actual YAMTL syntax. Lowercase snake case (e.g., `in_object_name`) usually denotes variable names and types, including lists of variable names. Uppercase snake case (e.g., `<FILTER>` or `<ACTION>`) represents lambda expressions, and they are written using the syntax of the host language. `[]?` means optional.
 
-A rule is declared using `rule('<name>')` with a rule name. The static operation `rule` can be used with `import static yamtl.dsl.Rule.*`. Each rule consists of one or more input element(s), defined using `in('<sourceObjectName>', <sourceObjectType>)` operation that requires a source element name and type; an optional filter condition expressed with `filter(<FILTER>)` where `<FILTER>` is a lambda expression of type `Supplier<Boolean`; and one or more output element(s), declared with `out('targetObjectName', <targetObjectType>, <ACTION>)` requiring a target element name and type, along with a side-effecting lambda expression `<ACTION>` of type `Runnable` containing action statements that initialize or update the output object attributes and references. <br>
+A rule is declared using `rule("<name>")` with a rule name. The static operation `rule` can be used with `import static yamtl.dsl.Rule.*`. Each rule consists of one or more input element(s), defined using `in("<in_object_name>", <in_object_type>)` operation that requires a source element name and type; an optional `.derivedWith(<QUERY>)` clause where `<QUERY>` is a lambda expression of type `Supplier<EObject>` that produces the object that will be matched to the input element; an optional filter condition expressed with `filter(<FILTER>)` where `<FILTER>` is a lambda expression of type `Supplier<Boolean`; and one or more output element(s), declared with `out("out_object_name", <out_object_type>, <ACTION>)` requiring a target element name and type, along with a side-effecting lambda expression `<ACTION>` of type `Runnable` containing action statements that initialize or update the output object attributes and references. <br>
 
 
 ## YAMTL Semantics
@@ -201,47 +202,180 @@ Model transformations can be used to define model queries by using pattern match
 
 ### Pattern Matching Semantics
 
-This section will describe the matching procedure of rules. To find a match for a rule, YAMTL first maps matched input elements to objects which satisfy the corresponding filter condition in the order defined in the rule. 
+Pattern matching is the process by which YAMTL tries to find object graphs in the input model where the input pattern of a rule can be matched. 
 
-The input elements are ordered by the size of their type extent (smaller-sized types are matched before bigger ones). For derived elements, YAMTL tries to complete the total match by processing query expressions in the order that they were declared. If a query cannot be resolved to an object, that rule's match is invalid. However, if a total match is found, the rule filter condition asserts that the match is satisfied by returning ``[true]`` which is the default value (even when a filter condition is not manually declared). Note that matched elements take precedence over derived elements so they are traversed first.
+There are two main types of input elements: **matched** elements, which are mapped by YAMTL to objects in the input model, and **derived** elements, which are defined with a `.derivedWith(<QUERY>)` clause and need to be derived from input elements that have been matched in preceding input elements. 
 
-!!! info "Design principles for efficient YAMTL use"
+To find a match for a rule, YAMTL first maps each matched input element of the rule to objects in the input model in the order in which they appear. For derived elements, YAMTL tries to complete the total match by processing query expressions in the order that they were declared. If a query cannot be resolved to an object, that rule"s match is invalid. 
+
+A match is **complete** when all input elements are mapped to objects, either implicitly via matched input elements or explicitly via derived input elements. A match is defined as a map where the key is the input variable name and the value is the corresponding matched `EObject`.
+
+!!! tip "Model-sensitive pattern matching"
+
+    The input elements are ordered by the size of their type extent (smaller-sized types are matched before bigger ones) when enabling the flag `YAMTLModule::setEnabledMatchingInputElementOrderBySize(true)`. This can lead to significant run-time improvements when the distribution of objects across types is imbalanced.
+    
+    This optimization can, however, cause problems when the order of the input elements alters the order in which input element declaration is expected in filter expressions. For example, assuming that `Type1` declares a boolean method `isEnabled()` and that `Type2` has fewer objects than `Type1`, the order of input elements in the following input pattern
+
+    ```
+    .in("a", Type1)
+    .in("b", Type2).filter{ a.isEnabled() }
+    ```
+
+    will be changed by the flag `setEnabledMatchingInputElementOrderBySize`. This will cause a problem because the input element `b` will be evaluated first and its filter condition needs "a" to be matched first. In such cases, the flag `YAMTLModule::setEnabledMatchingInputElementOrderBySize` must be kept disabled.
+
+
+A match for a rule is **valid** when it is complete and all of the filters of the input pattern are satisfied. Filters come in two flavours:
+
+* **Local filters**: defined for an input element `.in("<in_object_name>", <in_object_type>).filter(<FILTER>)`. The lambda expression `<FILTER>` can use any object variable declared in a preceding input element.
+* **Global filters**: defined for the last input element of the input pattern. All input object variables can be used for defining the filter expression. 
+
+!!! tip "Design principles for efficient pattern matching"
+
     1. Matched input elements should only be defined for matching objects that are not related to each other through references (if they are then they should be defined as derived elements instead).
 
     2. Local element filter conditions should be opted for instead of global rule filter conditions to help the matching algorithm remove invalid matches as soon as possible (reduces execution time).
 
-### Relational Semantics
+YAMTL"s pattern matcher can be used to implement model queries. A model query is a rule that only has an input pattern and that may have a final action block `endWith(<ACTION>)`:
 
-Generally, output elements are either *initialized* or *updated* during a transformation. 
+```
+rule("<name>")
+    .in("<in_object_name>", <in_object_type>)[.derivedWith(<QUERY>)]?[.filter(<FILTER>)]?
+    .query()
+    [.endWith(<ACTION>)]?
+```
 
-When an output element is defined with a new name it creates a new instance of the initialized object. Alternatively, when an output element refers to an input element i.e. input element is also an output element, the element is updated and no new object is created. In both cases, the mapping from input match to output match is traced as a transformation step. Ad-hoc objects that are manually created using an object factory and assigned to an output element in the ``ACTION`` expression, are not traced by YAMTL. This means such non-traceable objects cannot be fetched from another rule.
+The `<ACTION>` in `endWith(<ACTION>)` is a lambda expression of type `Runnable` that may use the input element variables to perform some action on the input objects that have been matched, e.g., reporting error messages or computing metrics.
+
+To configure and execute a YAMTL module for implementing rule-based queries, use the following template:
+
+```groovy
+def mm = BaseQuery.loadMetamodel("<path_to_metamodel>")
+def query = new BaseQuery(mm)
+query.selectedExecutionPhases = ExecutionPhase.MATCH_ONLY
+query.loadInputModels(["<in_domain_name>": "<path_to_model>"])
+query.execute()
+```
+
+When using dynamic EMF for accessing metamodel metadata (i.e., EMF code has not been generated for the metamodel), use the static method `YAMTLModule::loadMetamodel("<path_to_metamodel>")`, which works with both Ecore files (`.ecore`) and with [EMFatic](https://eclipse.dev/emfatic/) files (`.emf`) to load the metamodel. Then instantiate the YAMTL module containing the model query, configure it to execute only the matching phase, load the input models and, finally, execute the query using the method `YAMTLModule::execute()`. 
 
 
-### Rewriting Semantics
+### Out-place Model-to-Model Transformation Semantics
+
+YAMTL modules are typically used to specify model-to-model transformations, where the objects of an input model are mapped to objects of an output model that is created **from scratch**. This is commonly referred to as out-place transformation because the input model is read-only and not modified.
+
+Side effects in a model transformation are specified in the `out` elements of rules. For each transformation rule that has been matched, the rule is applied by creating an object in the output model for each `out` element and the object is initialized using the corresponding `<ACTION>` expression. Within a rule, an `ACTION` expression can refer to:
+
+* the input object variables (either matched or derived) of that rule, 
+* `using` variables of that rule, and 
+* all output object variables of that rule.
+
+When an expression needs to reference output objects that are initialized by other rules, the operator `YAMTLModule::fetch()` needs to be used. The primary purpose of the `fetch` operator is to retrieve output objects corresponding to a given input object through the application of a transformation rule. The simplest version is suitable for matched rules that have a single object pattern in both the input and output patterns: `fetch(input_matched_object)` will return the output object created by the rule that matched `input_matched_object`.
+
+Matched rules can be declared with the `toMany` modifier. This allows for repeated rule applications to the same input object, subject to a valid termination condition `toManyCap` based on the match count. With `toMany` rules, the same rule might match the same object multiple times. In such cases, we can reference each match (occurrence 'i' of a match) by the order in which they occurred: `fetch(<input_matched_object>, <i>)` will return the output object created by the ith match.
+
+When the output pattern comprises several object patterns, it's necessary to specify which output element we wish to fetch: `fetch(<input_matched_object>, <outVarName>)` will return the output object linked to the output element `outVarName`. If a matched rule with a complex output pattern also uses the `toMany` declaration, the output object can be retrieved with `fetch(input_matched_object, out_object_name, i)`.
+
+A lazy rule, whether unique or non-unique, requires explicit invocation to produce an output element. This is executed by using the rule name as follows:
+
+*   `fetch(<input_matched_object>, <out_object_name>, <rule_name>)` for lazy rules with a single input object and multiple output objects.
+*   `fetch(<input_matched_object>, <out_object_name>, <rule_name>, <i>)` for `toMany` lazy rules with a single input object and multiple output objects.
+
+When the input pattern contains more than one element, instead of using one single input object, a [valid match](#pattern-matching-semantics) must be provided by using a map where the keys are ``<in_object_name>``s and the values are the matched `EObject`s.
+
+
+!!! warning 
+    
+    In a rule with an output element `.out(<out_object_name>, <out_object_type>, <ACTION>)`, the expression ``<ACTION>`` should only be used to initialize the output object of type `<out_object_type>` that is created by this output element.
+
+
+
+!!! danger "TODO"
+    
+    Rules with additional arguments.
+
+
+### In-place Model Transoformation Semantics
+
+
+!!! danger "TODO"
+    
+    When an output element is defined with a new name it creates a new instance of the initialized object. Alternatively, when an output element refers to an input element i.e. input element is also an output element, the element is updated and no new object is created. In both cases, the mapping from input match to output match is traced as a transformation step. Ad-hoc objects that are manually created using an object factory and assigned to an output element in the ``ACTION`` expression, are not traced by YAMTL. This means such non-traceable objects cannot be fetched from another rule.
+
+
+
+## Lazy Rules
+
+## Helpers
+
+!!! danger "TODO"
+
+    This section is under construction. There is an example in `BaseHelper.groovy`
+
+A helper is an attribute whose value is computed and cached or an operation, whose return value is cached. There are two types of operations, static and contextual:
+
+`staticAttribute("<name>", <BODY>)` defines an attribute `<name>` whose value is determined by the expression `<BODY>` of type `Supplier<Object>`;
+
+`staticOperation("<name>", <FUNCTION>)` defines an operation `<name>` where ``<FUNCTION>`` is a lambda expression with a list of parameters specified as a map. The keys in the map are the names of the parameters and the values are the actual arguments. The body of the lambda expression must return a value. 
+
+=== "Groovy"
+
+    ```groovy
+    staticOperation("<name>", { argMap -> 
+        // returns the value of the parameter with name <param_name>
+        argMap.<param_name> 
+    })
+    ```
+
+=== "Xtend"
+
+    ```xtend
+    staticOperation("<name>", [ argMap | 
+        // returns the value of the parameter with name <param_name>
+        argMap.get("<param_name>")
+    ])
+    ```
+
+=== "Java"
+
+    ```java
+    staticOperation("<name>", argMap -> {
+        // returns the value of the parameter with name <param_name>
+        return argMap.get("<param_name>");
+    });
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    staticOperation("<name>") { argMap ->
+        // returns the value of the parameter with name <param_name>
+        argMap["<param_name>"]
+    }
+    ```
 
 
 
 
 
-
+`contextualOperation("<name>", <BIFUNCTION>)`
 
 ## Other components
 
 YAMTL is as expressive as ATL so it also has a lot of optional operations. These options provide a more thorough (full) syntax for the language.
 
 ```
-rule('<name>')
+rule("<name>")
     [.inheritsFrom(<ruleNameList>)]? 
     [.isAbstract()]? 
     [.isLazy() | .isUniqueLazy()]? 
     [.isTransient()]?
     {
-        .in('<sourceObjectName>', <sourceObjectType>)
+        .in("<in_object_name>", <in_object_type>)
         [(.filter(<FILTER>) | .derivedWith(<QUERY>))]?
     }+
     [.filter(<FILTER>)]?
     {
-        .out('<targetObjectName>', <targetObjectType>, <ACTION>)
+        .out("<out_object_name>", <out_object_type>, <ACTION>)
         [.overriding()]?
         [.drop()]?
     }+
@@ -250,21 +384,21 @@ rule('<name>')
 ```
 **Note: <> indicates user-definable expressions, []? means optional, []* means operation can occur 0 or more times, {}+ means operation can occur 1 or more times. These symbols are not part of the actual YAMTL syntax.**
 
-YAMTL has two types of input elements: **matched** and **derived**. Matched elements are initialized using YAMTL's matching algorithm, whereas derived elements are initialized using a contextual query and are dependent on at least one matched element. Intuitively, each rule has at least one matched input element as you would expect.
+YAMTL has two types of input elements: **matched** and **derived**. Matched elements are initialized using YAMTL"s matching algorithm, whereas derived elements are initialized using a contextual query and are dependent on at least one matched element. Intuitively, each rule has at least one matched input element as you would expect.
 
 Every rule has optional parameters for additional customization. They will be discussed from top to bottom of the full syntax provided above. The ``inheritsFrom(<ruleNameList>)`` operation is declared when the current rule inherits from parent rule(s) where ``ruleNameList`` is a comma-separated list of strings and the order of inheritance is specified sequentially. An optional ``abstract`` tag is used for abstract rules which cannot be matched automatically or applied. ``lazy`` rules are only applicable when the match for matched input elements is explicitly provided using the ``fetch`` command. The `fetch` operation uses an object resolution strategy based on internal traceability links and automatically does element mapping for the user. Keep in mind that the `fetch` operation fetches output objects whose corresponding input objects have been mapped by another rule. A `uniqueLazy` rule can only be applied if it has not been applied already for the same input match (``lazy`` rules do not have such a constraint). Notice, both ``lazy`` and `uniqueLazy` are not matched automatically. A rule defined as `transient` does not persist the target (output) elements when the target model flushes to physical storage.
 
-An input element has multiple options to provide flexibility of use. ``filter(<FILTER>)`` clause enables the user to add a local filter condition that needs to be satisfied by the matched object of the corresponding input element. ``<nameList>`` is a comma-separated list of strings that contain the names of objects you want to use in the filter expression. The ``derivedWith(<QUERY>)`` clause is used to declare an input element as **derived** where ``QUERY`` is a lambda expression of the 'EObject' type used to calculate the value of the match. 
+An input element has multiple options to provide flexibility of use. ``filter(<FILTER>)`` clause enables the user to add a local filter condition that needs to be satisfied by the matched object of the corresponding input element. ``<nameList>`` is a comma-separated list of strings that contain the names of objects you want to use in the filter expression. The ``derivedWith(<QUERY>)`` clause is used to declare an input element as **derived** where ``QUERY`` is a lambda expression of the "EObject" type used to calculate the value of the match. 
 
 A global filter condition for a rule can be added after the input element block using `filter(<FILTER>)` clause which allows the user to add filter(s) applicable to the global scope of the rule.
 
 Output elements also have some options. An ``overriding()`` qualifier is used to override inherited action expression(s) in the output element of a descendant rule. Elements that are used both as input and output can be removed using the ``.drop()`` clause. It has delete cascade semantics that indicates both the object and its contents following containment references are removed.
 
-Rules can also have some optionality at the end. The ``endWith(<ACTION>)`` method is used to define an optional ``<ACTION>`` lambda expression which can refer to any of the rule's elements and any local variables. Note that the ``endWith()`` method is purely for convenience: it facilitates the grouping of initialization of different output elements in a single code block. 
+Rules can also have some optionality at the end. The ``endWith(<ACTION>)`` method is used to define an optional ``<ACTION>`` lambda expression which can refer to any of the rule"s elements and any local variables. Note that the ``endWith()`` method is purely for convenience: it facilitates the grouping of initialization of different output elements in a single code block. 
 
-To change the priority of a rule, you can use the ``priority(P)`` operation where P is a 'long' value. Rules with lower priority are applied first by the YAMTL matching algorithm. Additionally, YAMTL provides attribute helpers for computing values during the initialization of the model transformation. The helpers are defined in the transformation's constructor. 
+To change the priority of a rule, you can use the ``priority(P)`` operation where P is a "long" value. Rules with lower priority are applied first by the YAMTL matching algorithm. Additionally, YAMTL provides attribute helpers for computing values during the initialization of the model transformation. The helpers are defined in the transformation"s constructor. 
 
-The ``helperStore()`` operation in the constructor contains the helper(s) as a list enclosed in square brackets `[]`. The helper syntax ``Helper('<helperName>')`` is used to define an attribute helper with the name in single quotes and is followed by a query lambda expression enclosed in square brackets``[]``. ``allInstances(<typeName>)`` operation is used to create OCL-like queries in lambda expressions.
+The ``helperStore()`` operation in the constructor contains the helper(s) as a list enclosed in square brackets `[]`. The helper syntax ``Helper("<helperName>")`` is used to define an attribute helper with the name in single quotes and is followed by a query lambda expression enclosed in square brackets``[]``. ``allInstances(<typeName>)`` operation is used to create OCL-like queries in lambda expressions.
 
 ## YAMTL Semantics
 
@@ -292,7 +426,7 @@ YAMTL modules can be imported and used in other Xtend/Java/Groovy classes by cre
 
 Module extension is used for composing modules i.e. creating a subclass of an existing module to extend the capabilities of the base module. When YAMTL modules are extended, the process of initializing rules and attribute helpers begins from the leaf modules (those that do not extend any other module). Initialization then proceeds along the hierarchy of extended modules, moving from parent modules to their descendants.
 
-When a specializing module declares a rule that is already defined in the parent module, the new rule redefines the existing one if they have compatible signatures. This means that the importing module's rule (child module) defines all elements of the rule from the imported module (parent module), and the type of each of such element in the child module must be a subtype of the type of the element in the parent module. This ensures that the specialization maintains compatibility with the base rule.
+When a specializing module declares a rule that is already defined in the parent module, the new rule redefines the existing one if they have compatible signatures. This means that the importing module"s rule (child module) defines all elements of the rule from the imported module (parent module), and the type of each of such element in the child module must be a subtype of the type of the element in the parent module. This ensures that the specialization maintains compatibility with the base rule.
 
 Attribute helpers (``Helper()``) are redefined when extending modules because they do not have any parameters. Imported rules and attribute helpers that are redefined cannot be accessed any longer.
 
