@@ -21,6 +21,7 @@ theme:
 
   features:
     - content.code.copy
+    - content.tabs.link
 
 plugins:
   - git-revision-date-localized:
@@ -48,3 +49,5 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true 

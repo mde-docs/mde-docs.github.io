@@ -1,12 +1,30 @@
 # YAMTL
 
-Yet Another Model Transformation Language (YAMTL) is an expressive model-to-model transformation language that is offered as an internal domain-specific language (DSL) of Java/Xtend. YAMTL was found to be the fastest incremental model transformation tool, in general, for dealing with complex transformations between AADL models according to an independent industrial case study. YAMTL is available as an IDE-agnostic Java dependency that augments the Java ecosystem with model analysis and model transformation capabilities that are not yet available in the latest version of Java. YAMTL transformations can be developed, debugged, and analyzed using the preferred Java IDE of choice and they can build upon existing Java dependencies to automate complex tasks. YAMTL operates on models defined with the Eclipse Modeling Framework.
+Yet Another Model Transformation Language (YAMTL) is an expressive model-to-model transformation language that is offered as an internal domain-specific language (DSL) of JVM languages, including Java, Xtend, Groovy and Kotlin.
 
-## Workspace Configuration
+YAMTL is available as an IDE-agnostic Java dependency that augments the Java ecosystem with model analysis and model transformation capabilities that are not yet available in the latest version of Java. YAMTL transformations can be developed, debugged, and analyzed using the preferred Java IDE of choice and they can build upon existing Java dependencies to automate complex tasks. YAMTL operates on models defined with the Eclipse Modeling Framework.
 
-To use YAMTL appropriately, the IDE must be properly configured. Let's check out the required configurations for some of the most popular IDEs: Eclipse, IntelliJ, and VSCode.
+YAMTL was found to be the fastest incremental model transformation tool, in general, for dealing with complex transformations between AADL models according to an independent industrial case study. 
 
-### Eclipse
+
+
+## Getting Started
+
+### What you will do
+Create and set up a YAMTL project (without models and metamodels) that is ready for model transformations in an IDE of your choice.
+
+### What you need
+
+* An IDE (e.g. Eclipse, VSCode or IntelliJ)
+* Java 17 or later (Minimum requirement)
+* Gradle 8.0+ (Minimum requirement)
+* Groovy plugin installed in your IDE (see [Workspace Configuration](#workspace-configuration) to install it)
+
+### Choosing an IDE
+
+To use YAMTL appropriately, an IDE must be properly configured. Let's check out the required configurations for some of the most popular IDEs: Eclipse, IntelliJ, and VSCode.
+
+#### Eclipse
 
 Open Eclipse IDE and head over to ```Help → Eclipse Marketplace```. Enter "Groovy" and install ``Groovy Development Tools 5.0.0.RELEASE`` to be able to run Groovy scripts.
 
@@ -17,7 +35,7 @@ Before you run any tasks, make sure your project is using **JDK 17 or higher**.
 
 Now you should be ready to use YAMTL in your modeling projects.
 
-### IntelliJ
+#### IntelliJ
 
 Head over to ``IntelliJ IDEA → Preferences → Plugins`` and search for ``Eclipse Groovy Compiler Plugin`` and install it.
 
@@ -30,7 +48,7 @@ Ensure the project is using **JDK 17 or higher**.
 
 All necessary configurations are now completed!
 
-### VSCode
+#### VSCode
 
 First, a groovy support package must be installed. ``code-groovy`` extension enables Groovy support for VSCode. In VScode, click on ``Extensions`` and search for "code-groovy". Install the extension from **Marlon Franca**.
 
@@ -44,18 +62,6 @@ Make sure the workspace is using **JDK 17 or higher**.
     ![JDK setting in VSCode](assets/images/jdk-vscode.png)
 
 The configurations are completed! [Get started with YAMTL](#getting-started) by installing some dependencies.
-
-## Getting Started
-
-### What you will do
-Create and set up a YAMTL project (without models and metamodels) that is ready for model transformations in an IDE of your choice.
-
-### What you need
-
-* An IDE (e.g. Eclipse, VSCode or IntelliJ)
-* Java 17 or later (Minimum requirement)
-* Gradle 8.0+ (Minimum requirement)
-* Groovy plugin installed in your IDE (see [Workspace Configuration](#workspace-configuration) to install it)
 
 ### Walkthrough
 
@@ -114,17 +120,112 @@ Finally, build the project to install the dependencies.
 
 You are now ready to use your YAMTL project! Check out the [examples](#examples) section to learn model transformations of varying difficulties using YAMTL.
 
-## Concrete Syntax
+## Basic Syntax
 
-The basic format of a YAMTL definition based on a Groovy script is as follows:
+A YAMTL model transformation is defined as a class that specializes the `YAMTLModule` class, which provides access to the YAMTL DSL and to methods to configure and execute model transformations:
+
+=== "Groovy"
+
+    ```groovy
+    class <name> extends YAMTLModule {
+        public <name> (EPackage <pk1>, EPackage <pk2>) {
+            header().in(<domainName1>,<pk1>).out(<domainName2>,<pk2>)
+            ruleStore([ /* rules here */ ])
+            helperStore([  /* managed helpers here */ ])
+        }
+    }
+    ```
+
+=== "Xtend"
+
+    ```xtend
+    class <name> extends YAMTLModule {
+        new(EPackage <pk1>, EPackage <pk2>) {
+            header().in(<domainName1>,<pk1>).out(<domainName2>,<pk2>)
+            ruleStore(#[ /* rules here */ ])
+            helperStore(#[ /* managed helpers here */ ])
+        }
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    public class <name> extends YAMTLModule {
+        public <name>(EPackage <pk1>, EPackage <pk2>) {
+            header().in(<domainName1>,<pk1>).out(<domainName2>,<pk2>);
+            ruleStore(List.of( /* rules here */ ));
+            helperStore(List.of( /* managed helpers here */ ));
+        }
+    }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    class <name>(<pk1>: EPackage, <pk2>: EPackage) : YAMTLModule() {
+        init {
+            header().`in`(<domainName1>,<pk1>).out(<domainName2>,<pk2>)
+            ruleStore(listOf( /* rules here */ ))
+            helperStore(listOf( /* managed helpers here */ ))
+        }
+    }
+    ```
+
+
+
+In the code above there are four important sections:
+
+* **Constructor** signature: It should include the different metamodels (`EPackage` instances) used in the transformation. 
+*   **Header**: This section declares the signature of the model transformation using a unique name for each domain and its corresponding metamodel, which can be shared across domains.  
+*   **Rule Store**: This section declares a list of transformation rules.
+*   **Helper Store (Optional)**: Accepts a list of managed helpers. Managed helpers are attributes or methods that are optimized in YAMTL using an internal cache for their results. Unmanaged helpers are declared as standard methods of the module class. This section is optional if no managed helpers are needed.
+
+The basic format of a YAMTL rule definition is as follows:
+
 ```
 rule('<name>')
     .in('<sourceObjectName>', <sourceObjectType>)[.filter(<FILTER>)]?
     .out('<targetObjectName>', <targetObjectType>, <ACTION>)
 ```
-**Note: <> indicates user-definable expressions. Note that these are placeholders and not part of the actual YAMTL syntax. Lower camel case (e.g., sourceObjectName) usually denotes variable names and types, including lists of variable names. Upper snake case (e.g., <FILTER> or <ACTION>) represents lambda expressions, and they are written using the syntax of the host language. []? means optional.**
+!!! note "Note"
 
-YAMTL transformation module begins by creating a specialization of the class `YAMTLModule`. The module's constructor contains the `header()` which defines the signature of the transformation (where you declare the input and output models) and the ``ruleStore()`` method containing rules as a list of ``rule()``s enclosed in square brackets ``[]``. A rule is instantiated using ``rule('<name>')`` with a rule name in the parentheses and single quotes. Each rule consists of one or more input element(s), defined using `in('<sourceObjectName>', <sourceObjectType>)` operation that requires a source element name and type; an optional filter condition expressed with ``filter(<FILTER>)`` where `<FILTER>` is a lambda expression; and one or more output element(s), declared with `out('targetObjectName', <targetObjectType>, <ACTION>)` requiring a target element name and type, along with a side-effecting lambda expression containing action statements that initialize or update the output object attributes and references. <br>
+    `<>` indicates user-definable expressions. Note that these are placeholders and not part of the actual YAMTL syntax. Camel case (e.g., `sourceObjectName`) usually denotes variable names and types, including lists of variable names. Upper case (e.g., `<FILTER>` or `<ACTION>`) represents lambda expressions, and they are written using the syntax of the host language. `[]?` means optional.
+
+A rule is declared using `rule('<name>')` with a rule name. The static operation `rule` can be used with `import static yamtl.dsl.Rule.*`. Each rule consists of one or more input element(s), defined using `in('<sourceObjectName>', <sourceObjectType>)` operation that requires a source element name and type; an optional filter condition expressed with `filter(<FILTER>)` where `<FILTER>` is a lambda expression of type `Supplier<Boolean`; and one or more output element(s), declared with `out('targetObjectName', <targetObjectType>, <ACTION>)` requiring a target element name and type, along with a side-effecting lambda expression `<ACTION>` of type `Runnable` containing action statements that initialize or update the output object attributes and references. <br>
+
+
+## YAMTL Semantics
+
+Model transformations can be used to define model queries by using pattern matching, out-place model transformation by *mapping* an input model into a *new* output model, or in-place model transformations by *rewriting* a given model.
+
+### Pattern Matching Semantics
+
+This section will describe the matching procedure of rules. To find a match for a rule, YAMTL first maps matched input elements to objects which satisfy the corresponding filter condition in the order defined in the rule. 
+
+The input elements are ordered by the size of their type extent (smaller-sized types are matched before bigger ones). For derived elements, YAMTL tries to complete the total match by processing query expressions in the order that they were declared. If a query cannot be resolved to an object, that rule's match is invalid. However, if a total match is found, the rule filter condition asserts that the match is satisfied by returning ``[true]`` which is the default value (even when a filter condition is not manually declared). Note that matched elements take precedence over derived elements so they are traversed first.
+
+!!! info "Design principles for efficient YAMTL use"
+    1. Matched input elements should only be defined for matching objects that are not related to each other through references (if they are then they should be defined as derived elements instead).
+
+    2. Local element filter conditions should be opted for instead of global rule filter conditions to help the matching algorithm remove invalid matches as soon as possible (reduces execution time).
+
+### Relational Semantics
+
+Generally, output elements are either *initialized* or *updated* during a transformation. 
+
+When an output element is defined with a new name it creates a new instance of the initialized object. Alternatively, when an output element refers to an input element i.e. input element is also an output element, the element is updated and no new object is created. In both cases, the mapping from input match to output match is traced as a transformation step. Ad-hoc objects that are manually created using an object factory and assigned to an output element in the ``ACTION`` expression, are not traced by YAMTL. This means such non-traceable objects cannot be fetched from another rule.
+
+
+### Rewriting Semantics
+
+
+
+
+
+
+
+## Other components
 
 YAMTL is as expressive as ATL so it also has a lot of optional operations. These options provide a more thorough (full) syntax for the language.
 
@@ -167,20 +268,6 @@ The ``helperStore()`` operation in the constructor contains the helper(s) as a l
 
 ## YAMTL Semantics
 
-### Dispatch Semantics
-
-This section will describe the matching procedure of rules in the MT definition. To find a match for a rule, YAMTL first maps matched input elements to objects which satisfy the corresponding filter condition in the order defined in `with` dependencies. This simply means in the clause ``.in(element1, type1).with([element2])``, ``element2`` is matched earlier than ``element1``. The user must carefully choose the order of precedence among input elements using `with` clauses because YAMTL will throw a run-time exception when trying to fetch an element that has not been matched yet. If there are no `with` dependencies, the input elements are ordered by the size of their type extent (smaller-sized types are matched before bigger ones). For derived elements, YAMTL tries to complete the total match by processing query expressions in the order that they were declared. If a query cannot be resolved to an object, that rule's match is invalid. However, if a total match is found, the rule filter condition asserts that the match is satisfied by returning ``[true]`` which is the default value (even when a filter condition is not manually declared). Note that matched elements take precedence over derived elements so they are traversed first.
-
-!!! info "Design principles for efficient YAMTL use"
-    1. Matched input elements should only be defined for matching objects that are not related to each other through references (if they are then they should be defined as derived elements instead).
-
-    2. Local element filter conditions should be opted for instead of global rule filter conditions to help the matching algorithm remove invalid matches as soon as possible (reduces execution time).
-
-### Execution Semantics
-
-Generally, output elements are either *initialized* or *updated* during a transformation. 
-
-When an output element is defined with a new name it creates a new instance of the initialized object. Alternatively, when an output element refers to an input element i.e. input element is also an output element, the element is updated and no new object is created. In both cases, the mapping from input match to output match is traced as a transformation step. Ad-hoc objects that are manually created using an object factory and assigned to an output element in the ``ACTION`` expression, are not traced by YAMTL. This means such non-traceable objects cannot be fetched from another rule.
 
 
 ### Multiple Rule Inheritance
