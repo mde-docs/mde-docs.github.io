@@ -36,6 +36,7 @@ nav:
     - YAMTL: 'yamtl.md'
   - Examples:
     - Linked List Reversal: 'examples/linked-list-reversal-example.md'
+    - Flowchart to HTML: 'examples/flowchart-to-html-example.md'
 
 
 markdown_extensions: 

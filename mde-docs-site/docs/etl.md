@@ -207,7 +207,7 @@ edge.target ::= t.parent;
 
 #### Interactive Transformations
 
-EOL statements can provide interactive capabilities to ETL transformations. In the example below, ``Tree2Node`` rule is modified by adding a ``guard`` statement which uses EOL's user-input method (`UserInput.confirm(String,Boolean)`) to ask for user's permission and confirmation of selecting specific Tree elements that need to be transformed to Node elements. The confirmation prompt appears at runtime hence making the model transformation interactive.
+EOL statements can provide interactive capabilities for ETL transformations. In the example below, ``Tree2Node`` rule is modified by adding a ``guard`` statement that uses EOL's user-input method (`UserInput.confirm(String,Boolean)`) to ask for user's permission and confirmation of selecting specific Tree elements that need to be transformed to Node elements. The confirmation prompt appears at runtime hence making the model transformation interactive.
 
 ```
 rule Tree2Node
@@ -231,4 +231,4 @@ rule Tree2Node
 
 * [Linked list reversal](examples/linked-list-reversal-example.md) project reverses a linked list data structure originally stored in XMI format (source model). ETL transformation generates an ``target.xmi`` containing the target model. Both source and target metamodels are created using EMF.
 
-* [Flowchart2HTML]() online playground example is a culmination of small yet expressive ETL scripts that transform elements from a Flowchart model to HTML elements. Important and easily understandable demos on ``@greedy``, ``@lazy``, ``@primary``, ``equivalent()``, one source to multiple targets and inheritance concepts have been covered in this project.
+* [Flowchart2HTML](https://eclipse.dev/epsilon/playground/?inheritance&examples=https://raw.githubusercontent.com/iNafey/epsilon-playground/main/examples.json) online playground example is a culmination of small yet expressive ETL scripts that transform elements from a Flowchart model to HTML elements. Important and easily understandable demos on ``@greedy``, ``@lazy``, ``@primary``, ``equivalent()``, one source to multiple targets and inheritance concepts have been covered in this project.
