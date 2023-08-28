@@ -307,20 +307,91 @@ When the input pattern contains more than one element, instead of using one sing
 
 ## Helpers
 
-!!! danger "TODO"
+A helper in YAMTL streamlines the writing of transformation rules by offering reusable expressions. Think of it as creating utility functions or methods in conventional programming languages.
 
-    This section is under construction. There is an example in `BaseHelper.groovy`
+In YAMTL, you can define helpers using standard constructs from the host programming language:
 
-A helper is an attribute whose value is computed and cached or an operation, whose return value is cached. There are two types of operations, static and contextual:
+*   **Attributes** with initialization expressions.
+*   **Static operations** that apply at the class level across all instances.
+*   **Operations** specific to objects.
 
-`staticAttribute("<name>", <BODY>)` defines an attribute `<name>` whose value is determined by the expression `<BODY>` of type `Supplier<Object>`;
+YAMTL further boosts these helpers' utility by caching their computations, optimizing runtime performance. Below, we present how to declare these helpers and call them in your transformations.
 
-`staticOperation("<name>", <FUNCTION>)` defines an operation `<name>` where ``<FUNCTION>`` is a lambda expression with a list of parameters specified as a map. The keys in the map are the names of the parameters and the values are the actual arguments. The body of the lambda expression must return a value. 
+### Attribute Helpers
+
+The method `staticAttribute("<name>", <BODY>)` creates an attribute `<name>`. Its value gets determined by the `<BODY>` expression, which must be of type `Supplier<Object>`.
+
+Attribute helpers shine when used with the `allInstances(<EClass>)` operator. This operator fetches a list containing all instances of the type `<EClass>` present in the input model. The expression `<BODY>` must return the value used to initialize the attribute, which can be an `EObject` or a primitive value.
 
 === "Groovy"
 
     ```groovy
-    staticOperation("<name>", { argMap -> 
+    staticAttribute("<AttributeName>", {  
+        // an expression returning a value from allInstances(<InputEClass>)
+    })
+    ```
+
+=== "Xtend"
+
+    ```xtend
+    staticAttribute("<AttributeName>", [|  
+        // an expression returning a value from allInstances(<InputEClass>)
+    ])
+    ```
+
+=== "Java"
+
+    ```java
+    staticAttribute("<AttributeName>", new Supplier<Object>() {  
+        @Override
+        public Object get() {
+            // an expression returning a value from allInstances(<InputEClass>)
+        }
+    });
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    staticAttribute("<AttributeName>") {  
+        // an expression returning a value from allInstances(<InputEClass>)
+    }
+    ```
+
+An attribute helper can then be called by name. While the YAMTL Groovy DSL allows us to consider the attribute helper as a variable using its name (without the String quotes) directly, the operator `fetch` needs to be used in all other programming languages:
+
+=== "Groovy"
+
+    ```groovy
+    <AttributeName>
+    ```
+
+=== "Xtend"
+
+    ```xtend
+    fetch("<AttributeName>")
+    ```
+
+=== "Java"
+
+    ```java
+    fetch("<AttributeName>")
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    fetch("<AttributeName>")
+    ```
+
+### Static Operation
+
+To manage static methods, YAMTL uses `staticOperation("<name>", <FUNCTION>)` to define an operation `<name>` where `<FUNCTION>` is a lambda expression with a list of parameters specified as a map. The keys in the map are the names of the parameters, and the values are the actual arguments. Within the body of the lambda expression, you can access the arguments map using `argMap` and must ensure to return a value.
+
+=== "Groovy"
+
+    ```groovy
+    staticOperation("<OperationName>", { argMap -> 
         // returns the value of the parameter with name <param_name>
         argMap.<param_name> 
     })
@@ -329,7 +400,7 @@ A helper is an attribute whose value is computed and cached or an operation, who
 === "Xtend"
 
     ```xtend
-    staticOperation("<name>", [ argMap | 
+    staticOperation("<OperationName>", [ argMap | 
         // returns the value of the parameter with name <param_name>
         argMap.get("<param_name>")
     ])
@@ -338,7 +409,7 @@ A helper is an attribute whose value is computed and cached or an operation, who
 === "Java"
 
     ```java
-    staticOperation("<name>", argMap -> {
+    staticOperation("<OperationName>", argMap -> {
         // returns the value of the parameter with name <param_name>
         return argMap.get("<param_name>");
     });
@@ -347,17 +418,107 @@ A helper is an attribute whose value is computed and cached or an operation, who
 === "Kotlin"
 
     ```kotlin
-    staticOperation("<name>") { argMap ->
+    staticOperation("<OperationName>") { argMap ->
         // returns the value of the parameter with name <param_name>
         argMap["<param_name>"]
     }
     ```
 
+Static operations are invoked by their names and the list of arguments, specifying the name of the parameter and the actual argument value. While the YAMTL Groovy DSL allows calling the static operation directly, all other programming languages require the `fetch` operator:
 
+=== "Groovy"
 
+    ```groovy
+    <OperationName>(["<param1>" : <value1>, ...])
+    ```
 
+=== "Xtend"
 
-`contextualOperation("<name>", <BIFUNCTION>)`
+    ```xtend
+    fetch("<OperationName>", #["<param1>" -> <value1>, ...])
+    ```
+
+=== "Java"
+
+    ```java
+    fetch("<OperationName>", Map.of("<param1>", <value1>, ...));
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    fetch("<OperationName>", mapOf("<param1>" to <value1>, ...))
+    ```
+
+### Contextual Operation
+
+To manage class methods, YAMTL uses `contextualOperation("<name>", <BIFUNCTION>)` to define an operation `<name>` where `<BIFUNCTION>` is a lambda expression with two parameters: the contextual instance or object to which the operation is applied, and list of parameters specified as a map. The keys in the map are the names of the parameters, and the values are the actual arguments. Within the body of the lambda expression, you can access the contextual instance or the arguments map, and must ensure to return a value, either an `EObject` or a primitive value.
+
+=== "Groovy"
+
+    ```groovy
+    staticOperation("<OperationName>", { obj, argMap -> 
+        // to access the contextual instance use 'obj' 
+        // to access an argument use 'argMap.<param_name>' 
+        // must return a value
+    })
+    ```
+
+=== "Xtend"
+
+    ```xtend
+    contextualOperation("<OperationName>", [ obj, argMap | 
+        // to access the contextual instance use 'obj' 
+        // to access an argument use 'argMap.get("<param_name>")' 
+        // must return a value
+    ])
+    ```
+
+=== "Java"
+
+    ```java
+    contextualOperation("<OperationName>", (obj, argMap) -> {
+        // to access the contextual instance use 'obj'
+        // to access an argument use 'argMap.get("<param_name>")'
+        // must return a value
+    });
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    contextualOperation("<OperationName>") { obj, argMap ->
+        // to access the contextual instance use 'obj'
+        // to access an argument use 'argMap["<param_name>"]'
+        // must return a value
+    }
+    ```
+
+Contextual operations are invoked on the `<ContextualInstance>` using the `<OperationName>` and the list of arguments, specifying the name of the parameter and the actual argument value. While the YAMTL Groovy DSL allows calling the  operation directly, all other programming languages require the `fetch` operator:
+
+=== "Groovy"
+
+    ```groovy
+    <OperationName>(<ContextualInstance>, ["<param1>" : <value1>, ...])
+    ```
+
+=== "Xtend"
+
+    ```xtend
+    <ContextualInstance>.fetch("<OperationName>", #["<param1>" -> <value1>, ...])
+    ```
+
+=== "Java"
+
+    ```java
+    fetch(<ContextualInstance>, "<OperationName>", Map.of("<param1>", <value1>, ...));
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    fetch(<ContextualInstance>, "<OperationName>", mapOf("<param1>" to <value1>, ...))
+    ```
 
 ## Other components
 
