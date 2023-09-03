@@ -381,7 +381,6 @@ package HTML;
 
 A sample source model representing the flowchart (can be altered in an MTL solution) in Flexmi format is as follows:
 ```
-<?nsuri flowchart?>
 <flowchart>
     <action name="Wake up" incoming="some time passes, start" outgoing=""/>
     <decision name="Is it too early?" incoming="" outgoing="yes, no"/>

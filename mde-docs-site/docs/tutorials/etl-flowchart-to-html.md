@@ -36,6 +36,8 @@ This is the HTML metamodel in Emfatic `.emf` as defined in the [Flowchart to HTM
 
 ## Source Model
 
+### Wakeup Flowchart
+
 The flowchart diagram can be represented in Flexmi with some changes (outgoing and incoming transitions of `Node` elements are removed because they cause syntactical errors for nodes with multiple transitions):
 
 ```
@@ -48,6 +50,33 @@ The flowchart diagram can be represented in Flexmi with some changes (outgoing a
     <transition name="yes" source="Is it too early?" target="Sleep"/>
     <transition name="some time passes" source="Sleep" target="Wake up"/>
     <transition name="no" source="Is it too early?" target="Get up"/>
+</flowchart>
+```
+
+### Wakeup Flowchart with Subflow
+
+Some MTL examples also transform the Flowchart's subflow elements, so, another flowchart (that contains subflow) based on the original flowchart is also defined. The flowchart model with subflow is as follows:
+
+**Graphical Representation**
+
+![Wakeup flowchart with Subflow](../assets/images/wakeup-with-subflow.png)
+
+**Abstract Syntax in Flexmi**
+
+```
+<flowchart>
+    <action name="Wake up"/>
+    <action name="Get up"/>
+    <action name="Begin"/>
+    <subflow name="Snoozing">
+        <action name="Sleep"/>
+        <decision name="Is it too early?"/>
+        <transition name="Yes" source="Is it too early?" target="Sleep"/>
+    </subflow>
+    <transition source="Wake up" target="Is it too early?"/>
+    <transition name="Some time passes" source="Sleep" target="Wake up"/>
+    <transition name="No" source="Is it too early?" target="Get up"/>
+    <transition name="Start" source="Begin" target="Wake up"/>
 </flowchart>
 ```
 
