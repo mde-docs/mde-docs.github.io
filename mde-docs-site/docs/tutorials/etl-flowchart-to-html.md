@@ -84,12 +84,9 @@ Some MTL examples also transform the Flowchart's subflow elements, so, another f
 
 ### Base Example
 
-```
-/*
-This ETL program converts a flowchart model to a HTML document. 
-Specifically, it turns all flowchart elements and sub-elements into headings.
-*/
+This ETL definition converts a flowchart model to an HTML document. Specifically, it turns all flowchart elements and sub-elements into headings.
 
+```
 //This rule transforms all flowchart elements to headings
 rule Flowchart2Heading
 	transform f : Source!Flowchart
@@ -125,10 +122,12 @@ rule Transition2Heading
 
 ### Inheritance
 
+Inheritance in ETL allows you to reuse the same transformation logic for different elements. In the example below, the `Flowchart2H1` rule is abstract and is extended by the `Subflow2H1` rule. The `Subflow2H1` rule inherits the transformation logic of the `Flowchart2H1` rule and adds its transformation logic.
+
 ```
 // If we make the following rule abstract, then only
 // subflows will be transformed.
-// @abstract
+@abstract
 rule Flowchart2H1
 	transform e : Source!Flowchart
 	to h1 : Target!H1 {
@@ -146,7 +145,11 @@ rule Subflow2H1
 }
 ```
 
+When the `Flowchart2H1` rule is abstract, only subflows will be transformed and output in the target model. When the `Flowchart2H1` rule is not abstract, all flowchart elements will be transformed. In this case, the `Subflow2H1` rule inherits from `Flowchart2H1` and substitutes the name of `e` input element (`e.name`) into the parent rule (note `e` input element is the same as `e` input element in the parent rule). Since `Subflow2H1` rule extends `Flowchart2H1` rule, the parent rule is also executed and the `e` element from the child is passed to the parent rule during execution, causing the value of `h1` in the parent rule to be "Flowchart Snoozing". This is also reflected when the `Subflow2H1` rule's output pattern is executed and its `h1` value will be "Subflow Flowchart Snoozing". 
+
 ### Lazy Execution
+
+Lazy rules are invoked after all non-lazy rules have been executed. In the example below, the `Action2Heading` and `Decision2Heading` rules are lazy and are invoked (in top-down order) after the `Flowchart2Heading` rule has been executed.
 
 ```
 //This ETL program transforms flowchart elements and sub-elements into HTML headings
@@ -158,7 +161,8 @@ rule Flowchart2Heading
 	div.children.addAll(f.nodes.equivalent());
 }
 
-//Lazy rules are invoked after all non-lazy rules have been executed
+// Lazy rules are invoked only when their output is 
+// requested by some other rule using equivalent() or ::=
 @lazy
 rule Action2Heading 
 	transform a : Source!Action
@@ -188,6 +192,8 @@ rule Transition2Heading
 
 ### Greedy Execution
 
+Greedy rules are invoked before all non-greedy rules have been executed. In the example below, the `NamedElement2Heading` rule is greedy and is invoked before other rules are executed.
+
 ```
 //This rule is used to transform a NamedElement into a Heading.
 //Flowchart class extends NamedElement, so all Flowchart elements will be transformed into Headings.
@@ -203,6 +209,8 @@ rule NamedElement2Heading
 ```
 
 ### Primary Annotation
+
+Rules with `primary` annotation are used to order the results of the `equivalent()` operation. In the example below, the `Transition2Heading` rule is primary and its results precede other rules.
 
 ```
 rule Flowchart2Heading
@@ -232,7 +240,7 @@ rule Transition2TargetLink
 	a.ahref = "#" + t.target.name;
 }
 
-// Results of equivalents() operation can be prioritized (ordered) using rules that are declared @primary
+//Results of equivalents() operation can be prioritized (ordered) using rules that are declared @primary
 //Primary rule's results precede other rules
 @primary
 rule Transition2Heading 
@@ -244,6 +252,8 @@ rule Transition2Heading
 ```
 
 ### Equivalent Operation
+
+The `equivalent()` operation is used to resolve source elements and define the mapping between source and target objects. In the example below, the `Flowchart2Div` rule transforms a `Flowchart` element into a `DIV` element. The `Transition2Heading` rule transforms a `Transition` element into an `H1` element. The `Flowchart2Div` rule uses the `equivalent()` operation to resolve the `Transition` elements of the `Flowchart` element.
 
 ```
 //This rule is used to transform a Flowchart into a DIV
@@ -272,7 +282,11 @@ rule Transition2Heading
 }
 ```
 
+ETL uses a special EOL operator (`::=`) to replace `equivalent()` clause as it keeps the code more concise and readable.
+
 ### Multiple Targets
+
+In ETL, you can have rules with multiple target elements. In the example below, the `Action2Elements` rule transforms an `Action` element into a `DIV`, `H1`, and `A` element. The `Decision2Elements` rule transforms a `Decision` element into a `DIV`, `H1`, and a sequence of `A` elements.
 
 ```
 rule Action2Elements
