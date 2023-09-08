@@ -150,7 +150,7 @@ If the importing module specifies a rule or pre/post block with the same name as
 
 When an ETL module is executed, the ``pre`` blocks are executed first. If there are multiple ``pre`` blocks, then they are executed sequentially in the order defined.
 
-Next, each non-abstract and non-lazy ``rule`` is executed for all elements on which the rule is applicable. To be applicable on a particular element, the element must have a type-of relationship (``sourceParameter`` fields must be filled) or a kind-of relationship (if the ``rule`` is annotated as ``@greedy``). Additionally, the element must satisfy the ``guard`` of the rule (and all rules it extends). Then the ``@abstract`` and  ``@lazy`` rules are executed in order.
+Next, each non-abstract and non-lazy ``rule`` is executed for all elements on which the rule is applicable. To be applicable to a particular element, the element must have a type-of relationship (``sourceParameter`` fields must be filled) or a kind-of relationship (if the ``rule`` is annotated as ``@greedy``). Additionally, the element must satisfy the ``guard`` of the rule (and all rules it extends). Then the ``@abstract`` and  ``@lazy`` rules are executed in order.
 
 After all rules have been executed, the ``post`` blocks are executed in the order they have been specified.
 
@@ -160,7 +160,7 @@ Resolving source elements is a common task in the execution of a rule and this h
 
 ``equivalents()`` *operation:*
 
-``equivalents()`` operation has different behaviours when applied to a single source element or a collection of elements. When applied on a single element, the operation inspects the transformation trace (see figure below) and invokes applicable rules (if necessary) to calculate the target element. When the operation is applied on a collection, a ``Bag`` containing ``Bag``s which contain the corresponding target elements of the original source elements is returned. Optionally, `equivalents()` operation can be invoked with a number of rule names as parameters to return equivalents created by specific rules. The execution of this operation also differs from the 'Execution Scheduling' discussed before, because ``equivalents()`` operation invokes both lazy and non-lazy rules.
+``equivalents()`` operation has different behaviors when applied to a single source element or a collection of elements. When applied on a single element, the operation inspects the transformation trace (see figure below) and invokes applicable rules (if necessary) to calculate the target element. When the operation is applied on a collection, a ``Bag`` containing `Bag`s that contain the corresponding target elements of the original source elements is returned. Optionally, `equivalents()` operation can be invoked with several rule names as parameters to return equivalents created by specific rules. The execution of this operation also differs from the 'Execution Scheduling' discussed before, because ``equivalents()`` operation invokes both lazy and non-lazy rules.
 
 The ordering of the ``equivalents()`` operations is sequential and runs in the order of the rules defined. However, this is not the case when a rule is declared ``@primary`` in which case the results of that rule will precede all of the other rules.
 
@@ -186,7 +186,7 @@ Transformation -- TransformRule: rule
 
 ``equivalent()`` *operation:*
 
-The `equivalent()` operation also has different behaviours when applied to a single source element or a collection. When the operation is applied to a single element only the first element of the result that would have been returned by the ``equivalents()`` operation is returned. When applied on a collection, the operation returns a flattened collection. Optionally, ``equivalent()`` operation can be invoked with or without parameters.
+The `equivalent()` operation also has different behaviours when applied to a single source element or a collection. When the operation is applied to a single element only the first element of the result that would have been returned by the ``equivalents()`` operation is returned. When applied to a collection, the operation returns a flattened collection. Optionally, ``equivalent()`` operation can be invoked with or without parameters.
 
 !!! info "Transformation trace persistance"
     ETL does not provide built-in support for persisting the transformation trace. If you want to access it, you can do so through ``System.context.transformationTrace`` and persists parts of the trace in a format of choice e.g. in a ``post`` block.

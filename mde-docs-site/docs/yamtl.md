@@ -79,7 +79,7 @@ plugins {
 Add the following repositories:
 ```
 repositories {
-	maven{ url 'https://github.com/yamtl/yamtl.github.io/raw/mvn-repo/mvn-repo/snapshot-repo' }
+	maven{ url 'https://github.com/yamtl/yamtl.github.io/raw/master/mvn-repo/snapshot-repo' }
 	mavenCentral()
 }
 ```

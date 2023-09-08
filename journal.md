@@ -12,6 +12,7 @@ This journal is a place to keep track of the progress of the MDE Docs project.
 ## Suggestions
 
 * Use CI/CD to collaborate and test the code.
+* Publish and host the current website.
 * Publish parts of the website to original documentation sites (i.e. Epsilon, ETL, YAMTL).
 * Potentially introduce video content to the docs (e.g. for debugging or walkthroughs).
 

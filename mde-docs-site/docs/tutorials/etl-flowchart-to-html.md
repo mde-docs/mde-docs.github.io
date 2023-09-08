@@ -132,7 +132,8 @@ rule Flowchart2H1
 	transform e : Source!Flowchart
 	to h1 : Target!H1 {
 	
-	h1.value = "Flowchart " + e.name; //Assigns the name of the flowchart to the value of the h1 element
+	//Assigns the name of the flowchart to the value of the h1 element
+	h1.value = "Flowchart " + e.name; 
 }
 
 //Transform subflows into headings
@@ -152,8 +153,6 @@ When the `Flowchart2H1` rule is abstract, only subflows will be transformed and 
 Lazy rules are invoked after all non-lazy rules have been executed. In the example below, the `Action2Heading` and `Decision2Heading` rules are lazy and are invoked (in top-down order) after the `Flowchart2Heading` rule has been executed.
 
 ```
-//This ETL program transforms flowchart elements and sub-elements into HTML headings
-
 rule Flowchart2Heading
 	transform f : Source!Flowchart
 	to div : Target!DIV {
@@ -196,7 +195,6 @@ Greedy rules are invoked before all non-greedy rules have been executed. In the 
 
 ```
 //This rule is used to transform a NamedElement into a Heading.
-//Flowchart class extends NamedElement, so all Flowchart elements will be transformed into Headings.
 
 //@greedy tag prioritizes execution of this rule over other rules.
 @greedy
@@ -240,7 +238,7 @@ rule Transition2TargetLink
 	a.ahref = "#" + t.target.name;
 }
 
-//Results of equivalents() operation can be prioritized (ordered) using rules that are declared @primary
+//Results of equivalents() can be ordered using rules that are declared @primary
 //Primary rule's results precede other rules
 @primary
 rule Transition2Heading 
@@ -261,8 +259,9 @@ rule Flowchart2Div
 	transform f : Source!Flowchart
 	to div : Target!DIV {
 	
-	//This equivalent() method returns a flattened list of all the transitions in the flowchart.
-	div.children ::= f.transitions; //The "::=" operator is the same as equivalent() method.
+	//The "::=" operator is the same as equivalent() method.
+	//This equivalent() method returns a flattened list of all the transitions.
+	div.children ::= f.transitions; 
 	
 	// The preceeding line is the same as:
 	//   div.children.addAll(f.transitions.equivalent());
@@ -291,9 +290,10 @@ In ETL, you can have rules with multiple target elements. In the example below, 
 ```
 rule Action2Elements
 	transform a : Source!Action
-	to container : Target!DIV, title : Target!H1, link : Target!A { //Note only one source element is transformed into 3 targets
-	
-	// Note that "Get up" is not transformed as it has no outgoing transitions
+	to container : Target!DIV, title : Target!H1, link : Target!A { 
+	//Note only one source element is transformed into 3 targets
+
+	//"Get up" is not transformed as it has no outgoing transitions
 	guard: a.outgoing.notEmpty() 
 	
 	title.value = a.name;
