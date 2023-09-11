@@ -84,7 +84,7 @@ Some MTL examples also transform the Flowchart's subflow elements, so, another f
 
 ### Base Example
 
-This ETL definition converts a flowchart model to an HTML document. Specifically, it turns all flowchart elements and sub-elements into headings.
+This ETL definition converts a flowchart model to an HTML document. Specifically, it turns all flowchart elements and sub-elements into headings. Each of the 4 rules only transform one type of element. The `Flowchart2Heading` rule transforms all flowchart elements into headings. The `Action2Heading` rule transforms all action elements into headings. The `Decision2Heading` rule transforms all decision elements into headings. The `Transition2Heading` rule transforms all transition elements into headings.
 
 ```
 //This rule transforms all flowchart elements to headings
@@ -120,6 +120,8 @@ rule Transition2Heading
 }
 ```
 
+Each of the rules defined above follow the same structure. The `transform` clause defines an input object with a type from the source metamodel. The `to` clause defines an output object with a type from the target metamodel. The `to` statment is followed by EOL statement(s) enclosed in curly braces. The EOL statements define the transformation logic. In this case, the transformation logic is to assign the name of the input element to the value of the output element.
+
 ### Inheritance
 
 Inheritance in ETL allows you to reuse the same transformation logic for different elements. In the example below, the `Flowchart2H1` rule is abstract and is extended by the `Subflow2H1` rule. The `Subflow2H1` rule inherits the transformation logic of the `Flowchart2H1` rule and adds its transformation logic.
@@ -150,7 +152,7 @@ When the `Flowchart2H1` rule is abstract, only subflows will be transformed and 
 
 ### Lazy Execution
 
-Lazy rules are invoked after all non-lazy rules have been executed. In the example below, the `Action2Heading` and `Decision2Heading` rules are lazy and are invoked (in top-down order) after the `Flowchart2Heading` rule has been executed.
+Lazy rules are those which are invoked only if their output is requested by another rule using an equivalent operation. The intended purpose is to manage the execution of different rules, and restrict executing only those lazy rules whose output needs to be accessed by some other rule. With regards to rule priority, lazy rules are invoked after all non-lazy rules have been executed. In the example below, the `Action2Heading` and `Decision2Heading` rules are lazy and are invoked (in top-down order) after the `Flowchart2Heading` rule has been executed.
 
 ```
 rule Flowchart2Heading
@@ -186,17 +188,16 @@ rule Transition2Heading
 	
 	h1.value = t.name;
 }
-
 ```
+
+In this example, three rules have been annotated as `@lazy`. However, only 2 of them (`Action2Heading` and `Decision2Heading`) are invoked. This is because lazy rules can only be applied if their result is requested using a `fetch()` operation (or `::=`) from another rule. `Action` and `Decision` elements inherit from `Node` elements. The `Flowchart2Heading` rule uses the `f.nodes.equivalent()` operation to fetch all `Node` elements (including `Action` and `Decision` elements) and transform them into `H1` elements. The `Transition2Heading` rule is never invoked because the `Flowchart2Heading` rule does not fetch any `Transition` elements.
 
 ### Greedy Execution
 
-Greedy rules are invoked before all non-greedy rules have been executed. In the example below, the `NamedElement2Heading` rule is greedy and is invoked before other rules are executed.
+Greedy rules are executed for all instances of the input type (including sub-types). The difference between a regular rule and a greedy rule, is that a regular rule only applies to instances of the given input type and not the sub-types. Note that greedy rules are not specially prioritized during execution.
 
 ```
-//This rule is used to transform a NamedElement into a Heading.
-
-//@greedy tag prioritizes execution of this rule over other rules.
+//@greedy tag allows the rule to be applicable to input type and all sub-types
 @greedy
 rule NamedElement2Heading
 	transform e : Source!NamedElement
@@ -206,9 +207,11 @@ rule NamedElement2Heading
 }
 ```
 
+In the example above, the `NamedElement2Heading` rule is greedy (annotated using `@greedy` tag) and is executed for all instances of the `NamedElement` type (including sub-types). Every flowchart element inherits from the `NamedElement` meaning the rule applies to all elements in the source model. Thus, names of all flowchart elements are transformed into headings.
+
 ### Primary Annotation
 
-Rules with `primary` annotation are used to order the results of the `equivalent()` operation. In the example below, the `Transition2Heading` rule is primary and its results precede other rules.
+Primary annotated rules are used to order the results of an equivalents() operation (defined in some other rule). The results of primary rules precede other rules. In the following example, the `Transition2Heading` rule is primary and its results precede other rules.
 
 ```
 rule Flowchart2Heading
@@ -249,9 +252,11 @@ rule Transition2Heading
 }
 ```
 
+This ETL definition shows that the `Flowchart2Heading` rule transforms a flowchart element into a `DIV` block. All transitions of the flowchart source model are fetched and added to the `contents` DIV block. When `equivalents()` operation is performed, all results of transformed `Transition` elements from other rules are returned. However, the rule annotated as `@primary` can supersede other rules in the result list and its result will be passed to the method call. In this case, the `Transition2Heading` rule is primary and its result will be passed to the `contents` DIV block. The other two rules (`Transition2SourceLink` and `Transition2TargetLink`) are not primary and their results will be ignored, they will still be executed but their results will not be in the `DIV` block. Note that `equivalents()` returns a sequence and `equivalents().first` returns the first item of the sequence not the results list.
+
 ### Equivalent Operation
 
-The `equivalent()` operation is used to resolve source elements and define the mapping between source and target objects. In the example below, the `Flowchart2Div` rule transforms a `Flowchart` element into a `DIV` element. The `Transition2Heading` rule transforms a `Transition` element into an `H1` element. The `Flowchart2Div` rule uses the `equivalent()` operation to resolve the `Transition` elements of the `Flowchart` element.
+Equivalent operation is mainly used for resolving the source elements and defining the mapping between input and output objects. When equivalents() operation is applied on a single source element, it would establish the transformation trace, invoke other rules (using the same source element) and return the newly transformed target elements. However, when equivalent() operation is applied, only the first result of the equivalents() operation is returned. When equivalent() operation is used on a collection, it returns a flattened collection instead of keeping more dimensions. In the example below, the `Flowchart2Div` rule transforms a `Flowchart` element into a `DIV` element. The `Transition2Heading` rule transforms a `Transition` element into an `H1` element. The `Flowchart2Div` rule uses the `equivalent()` operation to resolve the `Transition` elements of the `Flowchart` element.
 
 ```
 //This rule is used to transform a Flowchart into a DIV
@@ -281,11 +286,11 @@ rule Transition2Heading
 }
 ```
 
-ETL uses a special EOL operator (`::=`) to replace `equivalent()` clause as it keeps the code more concise and readable.
+ETL uses a special EOL operator (`::=`) to replace `equivalent()` clause as it keeps the code more concise and readable. The `Flowchart2DIV` rule contains an output element `div` of the `DIV` type. `div` adds all the `Transition` elements of the `Flowchart` element using the `equivalent()` operation. Remember, `equivalent()` returns only the first result of the `equivalents()` operation. In this case, the `Transition2Heading` rule is executed and the `h1` element is returned for each of the transitions. The `h1` elements are then added to the `div` element. If there was another rule that transformed `Transition` elements, then the order of the rules would determine which rule's result is returned by the `equivalent()` operation.
 
 ### Multiple Targets
 
-In ETL, you can have rules with multiple target elements. In the example below, the `Action2Elements` rule transforms an `Action` element into a `DIV`, `H1`, and `A` element. The `Decision2Elements` rule transforms a `Decision` element into a `DIV`, `H1`, and a sequence of `A` elements.
+As the name suggests, in ETL the user can have one source element transforming to multiple target elements in one rule. All target elements are mapped to the same source element and can interact with other target elements of the rule. In the example below, the `Action2Elements` rule transforms an `Action` element into a `DIV`, `H1`, and `A` element. The `Decision2Elements` rule transforms a `Decision` element into a `DIV`, `H1`, and a sequence of `A` elements.
 
 ```
 rule Action2Elements
@@ -322,6 +327,10 @@ rule Decision2Elements
 	container.children.addAll(links);
 }
 ```
+
+In the first rule `Action2Elements`, each of the `Action` flowchart elements is transformed into a `DIV` block, `H1` heading and `A` reference link. All of the target elements resolve to the same source element `a`. The `guard` clause ensures that only `Action` elements with outgoing transitions are transformed. Additionally, all target elements can interact with each other in the EOL statments i.e. `container` DIV element adds `title` and `link` elements as its children. 
+
+The second rule `Decision2Elements` transforms each of the `Decision` flowchart elements into a `DIV` block, `H1` heading and a sequence of `A` reference links. The `links` sequence is used to store all the `A` elements. The `for` loop iterates over all outgoing transitions of the `Decision` element and adds a new `A` element to the `links` sequence. The `links` sequence and `title` output variables are then added to the `container` DIV element.
 
 ## Development Platforms
 

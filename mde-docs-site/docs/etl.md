@@ -121,7 +121,7 @@ A rule can extend **one or more** rules using the ``extends`` keyword after the 
 
 An optional ``guard`` is a type of filter or a selection statement which is declared in the curly braces ({}) that contains a rule's ``body``. A simple *guard* is an EOL expression following a column (:) and a complex *guard* is a block of EOL statements enclosed in curly braces ({}).
 
-Apart from rules, ETL also includes ``pre`` and ``post`` blocks of EOL statements. The syntax for them is the keyword identifier as ``pre`` or ``post``, followed by an optional name and a set of EOL statments enclosed in curly braces ({}).
+Apart from rules, ETL also includes ``pre`` and ``post`` blocks of EOL statements. The syntax for them is the keyword identifier as ``pre`` or ``post``, followed by an optional name and a set of EOL statements enclosed in curly braces ({}).
 
 ```
 (pre|post) <name> {

@@ -239,7 +239,6 @@ def count = 0
 
 ruleStore([
     rule('Transitions2Div')
-        .priority(0)
         .isTransient()
         .endWith{count = div.children.size().toString()}
         .in("f", flowchartPk.Flowchart)
@@ -247,7 +246,6 @@ ruleStore([
             div.children.addAll(f.transitions)
         }), 
     rule('TransitionsCount')
-        .priority(1)
         .in("flowchart", flowchartPk.Flowchart)
         .out("h1", htmlPk.H1, {
             h1.value = "The ${flowchart.name} flowchart has ${count} transitions".toString()
@@ -574,17 +572,30 @@ The `selectedExecutionPhases` variable is set to `MATCH_ONLY` to only execute th
 The test script is responsible for loading source and target metamodels, initializing the MT definition, loading soure model into the transformation and executing it, and saving the output in the target model.
 
 ```
-// model transformation execution flow
-def src_metamodel = YAMTLModule.loadMetamodel(BASE_PATH + '/flowchart.ecore') as EPackage
-def tgt_metamodel = YAMTLModule.loadMetamodel(BASE_PATH + '/html.ecore') as EPackage
+// model transformation execution
+def srcRes = YAMTLModule.preloadMetamodel(BASE_PATH + '/flowchart.ecore') 
+def tgtRes = YAMTLModule.preloadMetamodel(BASE_PATH + '/html.ecore')
 
-def xform = new <groovyClass>(src_metamodel, tgt_metamodel)
+def xform = new <groovyClass>(srcRes.contents[0], tgtRes.contents[0])
+YAMTLGroovyExtensions.init(this)
 xform.loadInputModels(['in': BASE_PATH + '/wakeup.xmi'])
 xform.execute()
 xform.saveOutputModels(['out': BASE_PATH + '/<outputFileName>.xmi'])
+
+// test assertion
+def actualModel = xform.getOutputModel('out')
+EMFComparator comparator = new EMFComparator();
+// Load the expected model using the identical output metamodel from the transformation.
+// Essentially, use the same in-memory metamodel.
+xform.loadMetamodelResource(tgtRes) 
+def expectedResource = xform.loadModel(BASE_PATH + '/<expectedOutputFileName>.xmi', false)
+def assertionResult =  comparator.equals(expectedResource.getContents(), actualModel.getContents()) 
+assertTrue(assertionResult);
 ```
 
-First, both source and target metamodels are loaded using a `YAMTLModule` function called `loadMetamodel(<'projectPath'>)` and a type `EPackage` is applied because that is how `.ecore` files and their components are accessed in the project. Note that `BASE_PATH` is just a global variable (with the value 'model' in this case) containing base directory name. `xform` variable initializes a new MT definition if a valid Groovy class name and parameters (source and target metamodels) are provided. Next, the input model is loaded using project path and the transformation is executed. The output is saved within the target model in the location (path) provided.
+First, both source and target metamodels are each loaded as a resource using a `YAMTLModule` function called `loadMetamodel(<'projectPath'>)`. `.ecore` files and their components are accessed using the `resourceName.contents[0]` clause. Note that `BASE_PATH` is just a global variable (with the value 'model' in this case) containing base directory name. `xform` variable initializes a new MT definition if a valid Groovy class name and parameters (source and target metamodels) are provided. Next, the input model is loaded using project path and the transformation is executed. The output is saved within the target model in the location (path) provided.
+
+The test assertion is performed using the `EMFComparator` package which compares the expected and actual output models. The expected model is loaded from the 'model' directory. The `assertionResult` variable is a boolean that is true if the expected and actual models are equal. The assertion is performed using the `assertTrue()` function. In case, the assertion fails, it means the project is not configured correctly or the transformation definition was changed to give a different output.
 
 ## Development Platforms
 
