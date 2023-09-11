@@ -53,9 +53,10 @@ Create and set up a YAMTL project (without models and metamodels) that is ready 
 ### What you need
 
 * An IDE (e.g. Eclipse, VSCode or IntelliJ)
-* Java 17 or later (Minimum requirement)
-* Gradle 8.0+ (Minimum requirement)
+* Java 17 or later **(Minimum requirement)**
+* Gradle 8.0+ **(Minimum requirement)**
 * Groovy plugin installed in your IDE (see [Workspace Configuration](#workspace-configuration) to install it)
+* Time to complete: about 10 minutes
 
 ### Walkthrough
 
@@ -78,7 +79,7 @@ plugins {
 Add the following repositories:
 ```
 repositories {
-	maven{ url 'https://github.com/yamtl/yamtl.github.io/raw/mvn-repo/mvn-repo/snapshot-repo' }
+	maven{ url 'https://github.com/yamtl/yamtl.github.io/raw/master/mvn-repo/snapshot-repo' }
 	mavenCentral()
 }
 ```
@@ -111,8 +112,115 @@ The latest versions of the dependencies are defined in the ``build.gradle`` file
 * Find the latest ``${aspectJVersion}`` on [Maven Central](https://mvnrepository.com/artifact/org.aspectj/aspectjweaver)
 
 Finally, build the project to install the dependencies. 
+<!-- New:Start -->
+You are now ready to use your YAMTL project! Let's now learn how to create a model transformation definition.
 
-You are now ready to use your YAMTL project! Check out the [examples](#examples) section to learn model transformations of varying difficulties using YAMTL.
+* First, create a transformation script in `src/main/groovy` folder (you could also add a package to use multiple scripts) with the  `.groovy` suffix. Then, import a few YAMTL and EMF libraries:
+
+```
+import static yamtl.dsl.Rule.*
+import org.eclipse.emf.ecore.EPackage
+import yamtl.core.YAMTLModule
+import yamtl.groovy.YAMTLGroovyExtensions_dynamicEMF
+```
+
+* Create a specialization of the `YAMTLModule` by extending it:
+
+```
+class FirstExample extends YAMTLModule 
+```
+
+* Define a new public method `FirstExample` and pass the source and target metamodels of `EPackage` type as parameters (Ecore metamodel files are accessed through `EPackage`). **Note:** Depending on your case, you may have the same source and target metamodels so you can just pass one parameter.
+
+```
+public FirstExample(EPackage sourcePk, EPackage targetPk)
+```
+
+**OR**, if both source and target metamodels are the same:
+
+```
+public FirstExample(EPackage llPk)
+```
+
+* To enable EMF functionality to the YAMTL module, initialize an EMF extension:
+
+```
+YAMTLGroovyExtensions_dynamicEMF.init(this)
+```
+
+* Within the constructor, a `header()` is required to define the signature of the transformation: declaration of input and output models. `.in()` clause defines the characteristics of the input model, where the first parameter is the model's name in quotation marks `""` and the second parameter is the metamodel to which the input model conforms. The same applies to the output model definition within the `.out()` clause. 
+
+```
+header().in("in", sourcePk).out("out", targetPk)
+```
+
+* Next is the `ruleStore()` which contains a list of rule(s). Each rule has one or more input elements which are transformed to one or more output elements. The concrete syntax for rules is described in the next section.
+
+```
+ruleStore([
+    rule('LinkedList2LinkedList')
+				.in('s', llPk.LinkedList)
+				.out('t', llPk.LinkedList, {
+					t.nodes = fetch(s.nodes)
+					t.head = fetch(allInstances(llPk.Node).find{it.next==null})
+				}),
+			
+			rule('Node2Node')
+				.in('s', llPk.Node)
+				.out('t', llPk.Node, {
+					t.name = s.name
+					t.next = fetch(allInstances(llPk.Node).find{it.next==s})
+				})
+])
+```
+
+* You can also add optional helpers that can perform computations of values during the initialization of the transformation. Helpers are contained as a list within the `helperStore()` operation.
+
+```
+helperStore([
+    //Helpers
+])
+```
+
+That is how you can create a YAMTL transformation script. For a better idea of a working MT definition check out this Groovy script for an [example](tutorials/linked-list-reversal-yamtl.md) project:
+
+```
+import static yamtl.dsl.Rule.*
+import org.eclipse.emf.ecore.EPackage
+import yamtl.core.YAMTLModule
+import yamtl.groovy.YAMTLGroovyExtensions_dynamicEMF
+
+class FirstExample extends YAMTLModule {
+    
+    //In this case, both source and target metamodels are same
+	public FirstExample(EPackage llPk) {
+
+		YAMTLGroovyExtensions_dynamicEMF.init(this)
+
+		header().in('in', llPk).out('out', llPk)
+		
+		ruleStore([
+			rule('LinkedList2LinkedList')
+				.in('s', llPk.LinkedList)
+				.out('t', llPk.LinkedList, {
+					t.nodes = fetch(s.nodes)
+					t.head = fetch(allInstances(llPk.Node).find{it.next==null})
+				}),
+			
+			rule('Node2Node')
+				.in('s', llPk.Node)
+				.out('t', llPk.Node, {
+					t.name = s.name
+					t.next = fetch(allInstances(llPk.Node).find{it.next==s})
+				})
+		])
+	}
+}
+```
+
+That's all! Now you know how to create your own YAMTL project and define a model transformation script. To learn how to use rules, see [Concrete Syntax](#concrete-syntax) section. Or if you want to learn how to run YAMTL projects and configure models, head over to [Examples](#examples) so you can understand model transformations and special YAMTL operations of varying difficulties.
+
+<!-- New:End -->
 
 ## Concrete Syntax
 
@@ -212,3 +320,5 @@ Attribute helpers (``Helper()``) are redefined when extending modules because th
 ## Examples
 
 * The [Linked list reversal](examples/linked-list-reversal-example.md) example reverses a linked list data structure originally stored in XMI format (source model). YAMTL transformation generates an ``outputList.xmi`` containing the target model. Both source and target metamodels are created using the same ECore file since the data structure remains the same after the transformation. A Gradle test runs a Groovy script that loads the input model, executes the transformation, and saves the output model.
+
+* [Flowchart to HTML](examples/flowchart-to-html-example.md) project looks at transforming flowchart models into valid HTML documents. This project specifically has multiple transformation examples that cover a wide range of YAMTL operations, annotations, and core concepts. This project is perfect for readers who want to take the next step in learning more about the complete functionality of each MTL tool in well-documented bite-sized examples.

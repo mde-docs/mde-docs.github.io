@@ -121,7 +121,7 @@ A rule can extend **one or more** rules using the ``extends`` keyword after the 
 
 An optional ``guard`` is a type of filter or a selection statement which is declared in the curly braces ({}) that contains a rule's ``body``. A simple *guard* is an EOL expression following a column (:) and a complex *guard* is a block of EOL statements enclosed in curly braces ({}).
 
-Apart from rules, ETL also includes ``pre`` and ``post`` blocks of EOL statements. The syntax for them is the keyword identifier as ``pre`` or ``post``, followed by an optional name and a set of EOL statments enclosed in curly braces ({}).
+Apart from rules, ETL also includes ``pre`` and ``post`` blocks of EOL statements. The syntax for them is the keyword identifier as ``pre`` or ``post``, followed by an optional name and a set of EOL statements enclosed in curly braces ({}).
 
 ```
 (pre|post) <name> {
@@ -150,7 +150,7 @@ If the importing module specifies a rule or pre/post block with the same name as
 
 When an ETL module is executed, the ``pre`` blocks are executed first. If there are multiple ``pre`` blocks, then they are executed sequentially in the order defined.
 
-Next, each non-abstract and non-lazy ``rule`` is executed for all elements on which the rule is applicable. To be applicable on a particular element, the element must have a type-of relationship (``sourceParameter`` fields must be filled) or a kind-of relationship (if the ``rule`` is annotated as ``@greedy``). Additionally, the element must satisfy the ``guard`` of the rule (and all rules it extends). Then the ``@abstract`` and  ``@lazy`` rules are executed in order.
+Next, each non-abstract and non-lazy ``rule`` is executed for all elements on which the rule is applicable. To be applicable to a particular element, the element must have a type-of relationship (``sourceParameter`` fields must be filled) or a kind-of relationship (if the ``rule`` is annotated as ``@greedy``). Additionally, the element must satisfy the ``guard`` of the rule (and all rules it extends). Then the ``@abstract`` and  ``@lazy`` rules are executed in order.
 
 After all rules have been executed, the ``post`` blocks are executed in the order they have been specified.
 
@@ -160,7 +160,7 @@ Resolving source elements is a common task in the execution of a rule and this h
 
 ``equivalents()`` *operation:*
 
-``equivalents()`` operation has different behaviours when applied to a single source element or a collection of elements. When applied on a single element, the operation inspects the transformation trace (see figure below) and invokes applicable rules (if necessary) to calculate the target element. When the operation is applied on a collection, a ``Bag`` containing ``Bag``s which contain the corresponding target elements of the original source elements is returned. Optionally, `equivalents()` operation can be invoked with a number of rule names as parameters to return equivalents created by specific rules. The execution of this operation also differs from the 'Execution Scheduling' discussed before, because ``equivalents()`` operation invokes both lazy and non-lazy rules.
+``equivalents()`` operation has different behaviors when applied to a single source element or a collection of elements. When applied on a single element, the operation inspects the transformation trace (see figure below) and invokes applicable rules (if necessary) to calculate the target element. When the operation is applied on a collection, a ``Bag`` containing `Bag`s that contain the corresponding target elements of the original source elements is returned. Optionally, `equivalents()` operation can be invoked with several rule names as parameters to return equivalents created by specific rules. The execution of this operation also differs from the 'Execution Scheduling' discussed before, because ``equivalents()`` operation invokes both lazy and non-lazy rules.
 
 The ordering of the ``equivalents()`` operations is sequential and runs in the order of the rules defined. However, this is not the case when a rule is declared ``@primary`` in which case the results of that rule will precede all of the other rules.
 
@@ -186,7 +186,7 @@ Transformation -- TransformRule: rule
 
 ``equivalent()`` *operation:*
 
-The `equivalent()` operation also has different behaviours when applied to a single source element or a collection. When the operation is applied to a single element only the first element of the result that would have been returned by the ``equivalents()`` operation is returned. When applied on a collection, the operation returns a flattened collection. Optionally, ``equivalent()`` operation can be invoked with or without parameters.
+The `equivalent()` operation also has different behaviours when applied to a single source element or a collection. When the operation is applied to a single element only the first element of the result that would have been returned by the ``equivalents()`` operation is returned. When applied to a collection, the operation returns a flattened collection. Optionally, ``equivalent()`` operation can be invoked with or without parameters.
 
 !!! info "Transformation trace persistance"
     ETL does not provide built-in support for persisting the transformation trace. If you want to access it, you can do so through ``System.context.transformationTrace`` and persists parts of the trace in a format of choice e.g. in a ``post`` block.
@@ -207,7 +207,7 @@ edge.target ::= t.parent;
 
 #### Interactive Transformations
 
-EOL statements can provide interactive capabilities to ETL transformations. In the example below, ``Tree2Node`` rule is modified by adding a ``guard`` statement which uses EOL's user-input method (`UserInput.confirm(String,Boolean)`) to ask for user's permission and confirmation of selecting specific Tree elements that need to be transformed to Node elements. The confirmation prompt appears at runtime hence making the model transformation interactive.
+EOL statements can provide interactive capabilities for ETL transformations. In the example below, ``Tree2Node`` rule is modified by adding a ``guard`` statement that uses EOL's user-input method (`UserInput.confirm(String,Boolean)`) to ask for user's permission and confirmation of selecting specific Tree elements that need to be transformed to Node elements. The confirmation prompt appears at runtime hence making the model transformation interactive.
 
 ```
 rule Tree2Node
@@ -231,4 +231,4 @@ rule Tree2Node
 
 * [Linked list reversal](examples/linked-list-reversal-example.md) project reverses a linked list data structure originally stored in XMI format (source model). ETL transformation generates an ``target.xmi`` containing the target model. Both source and target metamodels are created using EMF.
 
-* [Flowchart2HTML]() online playground example is a culmination of small yet expressive ETL scripts that transform elements from a Flowchart model to HTML elements. Important and easily understandable demos on ``@greedy``, ``@lazy``, ``@primary``, ``equivalent()``, one source to multiple targets and inheritance concepts have been covered in this project.
+* [Flowchart to HTML](examples/flowchart-to-html-example.md) project is a culmination of small yet expressive transformation scripts that transform elements from a Flowchart model to HTML elements. Important and easily understandable demos on ``@greedy``, ``@lazy``, ``@primary``, ``equivalent()``, one source element to multiple targets, and inheritance concepts have been covered in this ETL project.
