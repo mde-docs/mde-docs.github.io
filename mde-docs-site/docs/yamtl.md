@@ -208,7 +208,7 @@ There are two main types of input elements: **matched** elements, which are mapp
 
 To find a match for a rule, YAMTL first maps each matched input element of the rule to objects in the input model in the order in which they appear. For derived elements, YAMTL tries to complete the total match by processing query expressions in the order that they were declared. If a query cannot be resolved to an object, that rule"s match is invalid. 
 
-A match for a matched rule must be **unique**. That is, no other rule should be applicable to the same match. Uniqueness of matches is checked at runtime using the flag `YAMTLModule::setEnableCorrectnessCheck(Boolean)`, which is `true` by default. Non-unique matches are allowed when using (unique) lazy rules, which are called on demand.
+A match for a matched rule must be **unique**. That is, no other rule should be applicable to the same match. Uniqueness of matches is checked at runtime using the flag `YAMTLModule::setEnableCorrectnessCheck(Boolean)`, which is `true` by default. Non-unique matches are allowed when using (unique) lazy rules, which are called on demand, and when using `toMany` rules, which create a fixed number of rule application for the same match.
 
 A match is **complete** when all input elements are mapped to objects, either implicitly via matched input elements or explicitly via derived input elements. A match is defined as a map where the key is the input variable name and the value is the corresponding matched `EObject`.
 
@@ -273,9 +273,11 @@ Side effects in a model transformation are specified in the `out` elements of ru
 * `using` variables of that rule, and 
 * all output object variables of that rule.
 
+#### The Operator Fetch()
+
 When an expression needs to reference output objects that are initialized by other rules, the operator `YAMTLModule::fetch()` needs to be used. The primary purpose of the `fetch` operator is to retrieve output objects corresponding to a given input object through the application of a transformation rule. The simplest version is suitable for matched rules that have a single object pattern in both the input and output patterns: `fetch(input_matched_object)` will return the output object created by the rule that matched `input_matched_object`.
 
-Matched rules can be declared with the `toMany` modifier. This allows for repeated rule applications to the same input object, subject to a valid termination condition `toManyCap` based on the match count. With `toMany` rules, the same rule might match the same object multiple times. In such cases, we can reference each match (occurrence 'i' of a match) by the order in which they occurred: `fetch(<input_matched_object>, <i>)` will return the output object created by the ith match.
+Matched rules can be declared with the `toMany` modifier. This allows for repeated rule applications to the same input object, where the function `toManyCap` indicates the number of occurrences. With `toMany` rules, the same rule might match the same object multiple times. In such cases, we can reference each match (occurrence 'i' of a match) by the order in which they occurred: `fetch(<input_matched_object>, <i>)` will return the output object created by the ith match.
 
 When the output pattern comprises several object patterns, it's necessary to specify which output element we wish to fetch: `fetch(<input_matched_object>, <outVarName>)` will return the output object linked to the output element `outVarName`. If a matched rule with a complex output pattern also uses the `toMany` declaration, the output object can be retrieved with `fetch(input_matched_object, out_object_name, i)`.
 
@@ -307,7 +309,73 @@ When the input pattern contains more than one element, instead of using one sing
 
 
 
+
+## YAMTL Rules
+
+YAMTL is as expressive as ATL so it also has a lot of optional operations. These options provide a more thorough (full) syntax for the language.
+
+```
+rule("<name>")
+    [.inheritsFrom(<ruleNameList>)]? 
+    [.isAbstract()]? 
+    [.isLazy() | .isUniqueLazy()]? 
+    [.isTransient()]?
+    {
+        .in("<in_object_name>", <in_object_type>)
+        [(.filter(<FILTER>) | .derivedWith(<QUERY>))]?
+    }+
+    [.filter(<FILTER>)]?
+    {
+        .out("<out_object_name>", <out_object_type>, <ACTION>)
+        [.overriding()]?
+        [.drop()]?
+    }+
+    [.endWith(<ACTION>)]?
+    [.priority(P)]?
+```
+**Note: <> indicates user-definable expressions, []? means optional, []* means operation can occur 0 or more times, {}+ means operation can occur 1 or more times. These symbols are not part of the actual YAMTL syntax.**
+
+YAMTL has two types of input elements: **matched** and **derived**. Matched elements are initialized using YAMTL"s matching algorithm, whereas derived elements are initialized using a contextual query and are dependent on at least one matched element. Intuitively, each rule has at least one matched input element as you would expect.
+
+Every rule has optional parameters for additional customization. They will be discussed from top to bottom of the full syntax provided above. The ``inheritsFrom(<ruleNameList>)`` operation is declared when the current rule inherits from parent rule(s) where ``ruleNameList`` is a comma-separated list of strings and the order of inheritance is specified sequentially. An optional ``abstract`` tag is used for abstract rules which cannot be matched automatically or applied. ``lazy`` rules are only applicable when the match for matched input elements is explicitly provided using the ``fetch`` command. The `fetch` operation uses an object resolution strategy based on internal traceability links and automatically does element mapping for the user. Keep in mind that the `fetch` operation fetches output objects whose corresponding input objects have been mapped by another rule. A `uniqueLazy` rule can only be applied if it has not been applied already for the same input match (``lazy`` rules do not have such a constraint). Notice, both ``lazy`` and `uniqueLazy` are not matched automatically. A rule defined as `transient` does not persist the target (output) elements when the target model flushes to physical storage.
+
+An input element has multiple options to provide flexibility of use. ``filter(<FILTER>)`` clause enables the user to add a local filter condition that needs to be satisfied by the matched object of the corresponding input element. ``<nameList>`` is a comma-separated list of strings that contain the names of objects you want to use in the filter expression. The ``derivedWith(<QUERY>)`` clause is used to declare an input element as **derived** where ``QUERY`` is a lambda expression of the "EObject" type used to calculate the value of the match. 
+
+A global filter condition for a rule can be added after the input element block using `filter(<FILTER>)` clause which allows the user to add filter(s) applicable to the global scope of the rule.
+
+Output elements also have some options. An ``overriding()`` qualifier is used to override inherited action expression(s) in the output element of a descendant rule. Elements that are used both as input and output can be removed using the ``.drop()`` clause. It has delete cascade semantics that indicates both the object and its contents following containment references are removed.
+
+Rules can also have some optionality at the end. The ``endWith(<ACTION>)`` method is used to define an optional ``<ACTION>`` lambda expression which can refer to any of the rule"s elements and any local variables. Note that the ``endWith()`` method is purely for convenience: it facilitates the grouping of initialization of different output elements in a single code block. 
+
+To change the priority of a rule, you can use the ``priority(P)`` operation where P is a "long" value. Rules with lower priority are applied first by the YAMTL matching algorithm. Additionally, YAMTL provides attribute helpers for computing values during the initialization of the model transformation. The helpers are defined in the transformation"s constructor. 
+
+The ``helperStore()`` operation in the constructor contains the helper(s) as a list enclosed in square brackets `[]`. The helper syntax ``Helper("<helperName>")`` is used to define an attribute helper with the name in single quotes and is followed by a query lambda expression enclosed in square brackets``[]``. ``allInstances(<typeName>)`` operation is used to create OCL-like queries in lambda expressions.
+
+
+
 ## Lazy Rules
+
+Lazy rules, similar to matched rules, transform input objects into output objects. However, unlike matched rules that apply automatically, lazy rules must be explicitly invoked. This can be achieved using the fetch() operator. Such an approach makes the transformation process more modular. By treating lazy rules as helper functions that only execute when called, they produce outputs based on specific inputs without unnecessary runs. This ensures that transformations only occur when required, enhancing efficiency.
+
+There are two types of lazy rules:
+
+* Standard Lazy Rules (`isLazy()`): These are the basic form of lazy rules. They need to be explicitly invoked using mechanisms like the operator `fetch()`. Once called, they take specified input elements from the input model and produce corresponding output elements in the output model. However, if invoked multiple times with the same inputs, they may produce redundant output elements. A typical use case that illustrates the use of rules `isLazy()` is for maintaining a trace or log of all transformation steps, as redundant objects can act as a record of every individual transformation invocation, even if they are from the same input.
+* Unique Lazy Rules (`isUniqueLazy()`): These are an enhanced version of the standard lazy rules. The primary distinction is their guarantee of execution uniqueness. If a unique lazy rule is called more than once with the same input elements, it ensures that the transformation occurs only once. This means that the result of the initial call is cached and reused for subsequent calls with identical inputs, preventing the generation of duplicate output elements. Unique lazy rules repurpose the declarative semantics of matched rules with a lazy evaluation strategy.
+
+## ToMany Rules
+
+
+Matched rules can be declared with the modifier `toMany` to enable repeated rule applications to the same input object, using `toManyCap` to indicate how many rule applications should be performed. With `toMany` rules, the same rule might match the same object multiple times. In such cases, we can reference each match (occurrence 'i' of a match) by the order in which they occurred: `fetch(<input_matched_object>, <i>)` will return the output object created by the ith match.
+
+Declaring a rule with the modifier `toMany` adds the variable `matchCount` to the execution environment, which is used to distinguish the different rule applications starting from `0` for the first application. This variable is available during both pattern matching and transformation execution. This means that the variable `matchCount` can be used in filter expressions
+
+The property `toManyCap` receives a function of type `Supplier<Integer>`, which determines the total number of rule applications that should apply to the same match.
+
+When declaring rules using rule inheritance together with the modifier `toMany()`, all rules in the inheritance hierarchy must be `toMany()`.
+
+!!! info Differences with Lazy Rules
+
+    A matched rule that is `toMany` is scheduled by the tranformation engine and not called on demand. However, when it is matched, the same match is associated with a list of rule applications. While the match is still unique for a particular rule, it is shared among different rule applications.
 
 ## Helpers
 
@@ -524,46 +592,7 @@ Contextual operations are invoked on the `<ContextualInstance>` using the `<Oper
     fetch(<ContextualInstance>, "<OperationName>", mapOf("<param1>" to <value1>, ...))
     ```
 
-## Other components
 
-YAMTL is as expressive as ATL so it also has a lot of optional operations. These options provide a more thorough (full) syntax for the language.
-
-```
-rule("<name>")
-    [.inheritsFrom(<ruleNameList>)]? 
-    [.isAbstract()]? 
-    [.isLazy() | .isUniqueLazy()]? 
-    [.isTransient()]?
-    {
-        .in("<in_object_name>", <in_object_type>)
-        [(.filter(<FILTER>) | .derivedWith(<QUERY>))]?
-    }+
-    [.filter(<FILTER>)]?
-    {
-        .out("<out_object_name>", <out_object_type>, <ACTION>)
-        [.overriding()]?
-        [.drop()]?
-    }+
-    [.endWith(<ACTION>)]?
-    [.priority(P)]?
-```
-**Note: <> indicates user-definable expressions, []? means optional, []* means operation can occur 0 or more times, {}+ means operation can occur 1 or more times. These symbols are not part of the actual YAMTL syntax.**
-
-YAMTL has two types of input elements: **matched** and **derived**. Matched elements are initialized using YAMTL"s matching algorithm, whereas derived elements are initialized using a contextual query and are dependent on at least one matched element. Intuitively, each rule has at least one matched input element as you would expect.
-
-Every rule has optional parameters for additional customization. They will be discussed from top to bottom of the full syntax provided above. The ``inheritsFrom(<ruleNameList>)`` operation is declared when the current rule inherits from parent rule(s) where ``ruleNameList`` is a comma-separated list of strings and the order of inheritance is specified sequentially. An optional ``abstract`` tag is used for abstract rules which cannot be matched automatically or applied. ``lazy`` rules are only applicable when the match for matched input elements is explicitly provided using the ``fetch`` command. The `fetch` operation uses an object resolution strategy based on internal traceability links and automatically does element mapping for the user. Keep in mind that the `fetch` operation fetches output objects whose corresponding input objects have been mapped by another rule. A `uniqueLazy` rule can only be applied if it has not been applied already for the same input match (``lazy`` rules do not have such a constraint). Notice, both ``lazy`` and `uniqueLazy` are not matched automatically. A rule defined as `transient` does not persist the target (output) elements when the target model flushes to physical storage.
-
-An input element has multiple options to provide flexibility of use. ``filter(<FILTER>)`` clause enables the user to add a local filter condition that needs to be satisfied by the matched object of the corresponding input element. ``<nameList>`` is a comma-separated list of strings that contain the names of objects you want to use in the filter expression. The ``derivedWith(<QUERY>)`` clause is used to declare an input element as **derived** where ``QUERY`` is a lambda expression of the "EObject" type used to calculate the value of the match. 
-
-A global filter condition for a rule can be added after the input element block using `filter(<FILTER>)` clause which allows the user to add filter(s) applicable to the global scope of the rule.
-
-Output elements also have some options. An ``overriding()`` qualifier is used to override inherited action expression(s) in the output element of a descendant rule. Elements that are used both as input and output can be removed using the ``.drop()`` clause. It has delete cascade semantics that indicates both the object and its contents following containment references are removed.
-
-Rules can also have some optionality at the end. The ``endWith(<ACTION>)`` method is used to define an optional ``<ACTION>`` lambda expression which can refer to any of the rule"s elements and any local variables. Note that the ``endWith()`` method is purely for convenience: it facilitates the grouping of initialization of different output elements in a single code block. 
-
-To change the priority of a rule, you can use the ``priority(P)`` operation where P is a "long" value. Rules with lower priority are applied first by the YAMTL matching algorithm. Additionally, YAMTL provides attribute helpers for computing values during the initialization of the model transformation. The helpers are defined in the transformation"s constructor. 
-
-The ``helperStore()`` operation in the constructor contains the helper(s) as a list enclosed in square brackets `[]`. The helper syntax ``Helper("<helperName>")`` is used to define an attribute helper with the name in single quotes and is followed by a query lambda expression enclosed in square brackets``[]``. ``allInstances(<typeName>)`` operation is used to create OCL-like queries in lambda expressions.
 
 ## YAMTL Semantics
 
