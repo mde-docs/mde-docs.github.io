@@ -208,7 +208,7 @@ There are two main types of input elements: **matched** elements, which are mapp
 
 To find a match for a rule, YAMTL first maps each matched input element of the rule to objects in the input model in the order in which they appear. For derived elements, YAMTL tries to complete the total match by processing query expressions in the order that they were declared. If a query cannot be resolved to an object, that rule"s match is invalid. 
 
-A match for a matched rule must be **unique**. That is, no other rule should be applicable to the same match. Uniqueness of matches is checked at runtime using the flag `YAMTLModule::setEnableCorrectnessCheck(Boolean)`, which is `true` by default. Non-unique matches are allowed when using (unique) lazy rules, which are called on demand, and transient rules, whose output is not persisted.
+A match for a matched rule must be **unique**. That is, no other rule should be applicable to the same match. Uniqueness of matches is checked at runtime using the flag `YAMTLModule::setEnableCorrectnessCheck(Boolean)`, which is `true` by default. Non-unique matches are allowed when using (unique) lazy rules, which are called on demand.
 
 A match is **complete** when all input elements are mapped to objects, either implicitly via matched input elements or explicitly via derived input elements. A match is defined as a map where the key is the input variable name and the value is the corresponding matched `EObject`.
 
