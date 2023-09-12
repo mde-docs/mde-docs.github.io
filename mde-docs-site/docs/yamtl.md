@@ -208,6 +208,8 @@ There are two main types of input elements: **matched** elements, which are mapp
 
 To find a match for a rule, YAMTL first maps each matched input element of the rule to objects in the input model in the order in which they appear. For derived elements, YAMTL tries to complete the total match by processing query expressions in the order that they were declared. If a query cannot be resolved to an object, that rule"s match is invalid. 
 
+A match for a matched rule must be **unique**. That is, no other rule should be applicable to the same match. Uniqueness of matches is checked at runtime using the flag `YAMTLModule::setEnableCorrectnessCheck(Boolean)`, which is `true` by default. Non-unique matches are allowed when using (unique) lazy rules, which are called on demand, and transient rules, whose output is not persisted.
+
 A match is **complete** when all input elements are mapped to objects, either implicitly via matched input elements or explicitly via derived input elements. A match is defined as a map where the key is the input variable name and the value is the corresponding matched `EObject`.
 
 !!! tip "Model-sensitive pattern matching"
@@ -224,7 +226,7 @@ A match is **complete** when all input elements are mapped to objects, either im
     will be changed by the flag `setEnabledMatchingInputElementOrderBySize`. This will cause a problem because the input element `b` will be evaluated first and its filter condition needs "a" to be matched first. In such cases, the flag `YAMTLModule::setEnabledMatchingInputElementOrderBySize` must be kept disabled.
 
 
-A match for a rule is **valid** when it is complete and all of the filters of the input pattern are satisfied. Filters come in two flavours:
+A match for a rule is **valid** when it is unique, complete and all of the filters of the input pattern are satisfied. Filters come in two flavours:
 
 * **Local filters**: defined for an input element `.in("<in_object_name>", <in_object_type>).filter(<FILTER>)`. The lambda expression `<FILTER>` can use any object variable declared in a preceding input element.
 * **Global filters**: defined for the last input element of the input pattern. All input object variables can be used for defining the filter expression. 
@@ -234,6 +236,8 @@ A match for a rule is **valid** when it is complete and all of the filters of th
     1. Matched input elements should only be defined for matching objects that are not related to each other through references (if they are then they should be defined as derived elements instead).
 
     2. Local element filter conditions should be opted for instead of global rule filter conditions to help the matching algorithm remove invalid matches as soon as possible (reduces execution time).
+
+    3. Once it is known that only unique matches are found within a model for a given set of rules, the model transformation containing them can be executed more efficiently by disabling the uniqueness correctness check with `YAMTLModule::setEnableCorrectnessCheck(false)`.
 
 YAMTL"s pattern matcher can be used to implement model queries. A model query is a rule that only has an input pattern and that may have a final action block `endWith(<ACTION>)`:
 
