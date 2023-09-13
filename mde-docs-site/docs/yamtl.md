@@ -598,31 +598,54 @@ Contextual operations are invoked on the `<ContextualInstance>` using the `<Oper
 
 
 
-### Multiple Rule Inheritance
+### Rule Inheritance
 
-The rule inheritance semantics differ for **matched** and **derived** input elements. In **matched** input elements, local filter expressions (``filter(<FILTER>)``) are inherited using a leftmost top-down evaluation strategy concerning the inheritance hierarchy defined in the ``inheritsFrom(<ruleNameList>)`` clauses (where the rules in the list are sequentially ordered). Derivation expressions (``derivedWith(<QUERY>)``) in **derived** input elements are overridden if declared else inherited.
+Rule inheritance in YAMTL enables a transformation developer to create a new transformation rule by inheriting the behaviour of multiple existing rules. This mechanism simplifies the transformation process by allowing you to build on existing rule logic without duplicating code, promoting code reuse and encapsulation.
 
-Regarding output elements, action expressions (`ACTION`) are inherited through a leftmost top-down evaluation strategy for the inheritance hierarchy by default. These expressions can be overridden by defining an ``overriding()`` qualifier at the end of an output element of a descendant rule.
+The following characteristics define multiple rule inheritance in YAMTL:
 
-In a **specialized** rule, YAMTL has a few requirements:
+* **Abstract rules**: Abstract rules are defined with the clause `.isAbstract()`. These rules typically act as templates or base rules that other rules can inherit from. These rules are not executed directly and their input/output pattern elements may refer to abstract classes.
+* **Concrete rules** are rules that are executed if a valid match is found for the input pattern and the output pattern can only refer to concrete classes, i.e., those that can be instantiated in the output metamodel.
+* A descendant rule can inherit from one or several parent rules using the clause ``inheritsFrom(<ruleNameList>)``.
 
-* The parent rule elements must be declared in the descendant rule
+When using rule inheritance, rules are expected to be **covariant** both in input elements and in output elements with respect to inheritance relationships. When an input or an output element is declared in a parent rule but not declared in a child rule, it is implicitly inherited. The semantics of a transformation rule with respect to inheritance is as follows: 
 
-* Abstract rules must be specialized.
+* **Pattern matching semantics**. In **matched** input elements, filter expressions are inherited using a leftmost top-down evaluation strategy w.r.t. the inheritance hierarchy defined in clauses ``inheritsFrom(<ruleNameList>)``. When a filter is defined for a input element `in("<in_object_name1>", <in_object_type1>).filter{ <FILTER1> }` is declared in a parent rule but it is not declared in a descendant rule, it is inherited. If the input element `in("<in_object_name1>", <in_object_type2>).filter{ <FILTER2> }` is also defined in a descendant rule, `<FILTER2>` refines `<FILTER1>` by adding more constraints. That is. both `<FILTER1>` and `<FILTER2>` must be satisfied by a match for the descendant rule. In addition, `<in_object_type2>` can be a subclass of `<in_object_type1>`. In **derived** input elements, derivation expressions (``derivedWith(<QUERY>)``) are overriden if they are declared in a descendant rule or simply inherited otherwise.  
+* **Transformation execution semantics**. In output elements, action expressions are also inherited following a leftmost top-down evaluation strategy w.r.t. the inheritance hierarchy by default. When an output element `out("<out_object_name>", <out_object_type1>, { <ACTION1> })` in a parent rule is refined by an output element `out("<out_object_name>", <out_object_type2>, { <ACTION2> })` in a descendant rule, where `<in_object_type2>` may be a subclass of `<in_object_type1>`, then both `<ACTION1>` and `<ACTION2>` will be executed, in that order. The default behaviour can be overriden by using the qualifier `overriding` in the corresponding output element of a descendant rule. When using `overriding()` in an output element, the parent action `<ACTION1>` is not executed.
 
-* Concrete rules (non-abstract) should have elements in the output pattern (`out()`) that are typed with concrete classes.
+The following table summarizes the errors that YAMTL detects when parsing model transformation rules:
 
-If these constraints are violated, a declaration error is thrown. When a specialized rule inherits the same output element from two different parent rules, YAMTL displays a warning to the user but the model transformation still proceeds.
+| Scope | Error Description | Explanation | Resolution |
+| --- | --- | --- | --- |
+| Rule | Abstract Rule with No Children Rules | An abstract rule should have at least one child rule. | Define child rules for the abstract rule or consider making it non-abstract if no child rules are intended. |
+| Rule | Concrete Rule Specialized by an Abstract Rule | Occurs when a concrete rule is specialized by an abstract rule, which is not allowed. | Ensure that concrete rules are not specialized by abstract rules. |
+| Input | Incompatible Input Element Types | Occurs when an input element's type in a descendant rule is not a subtype of the same input element's type in a parent rule. | Make sure that the types of input elements in the descendant rule are compatible with those in the parent rule. |
+| Input | Mismatched Nature of Input Elements | Occurs when an input element's nature (matched/derived) differs between a rule and its parent rule. | Ensure that the nature of input elements is consistent between the descendant rule and its parent rule. |
+| Input | Input Element Inherited from Two Separate Parent Rules | An input element cannot be inherited from two separate parent rules. | Avoid inheriting the same input element from two separate parent rules to prevent conflicts. |
+| Output | Output Element Declared as 'Overriding' with No Parent Rule | Occurs when an output element is declared as 'overriding', but there is no parent rule to override. | Remove the 'overriding' declaration or ensure that the rule has a valid parent rule. |
+| Output | Incompatible Output Element Types | Occurs when an output element's type in a descendant rule is not a subtype of the same output element's type in a parent rule. | Ensure that the types of output elements in the descendant rule are compatible with those in the parent rule. |
+| Output | Output Element Declared as 'Drop' with No Valid Input Element | Occurs when an output element is declared as 'drop', but it does not refer to a valid input element. | Check that the 'drop' declaration references a valid input element, or remove it if unnecessary. |
+| Output | Output Element Inherited from Two Parent Rules with Different Types | An output element cannot be inherited from two parent rules with incompatible types; this results in an error. | Ensure that the types of inherited output elements are compatible between parent rules. |
+| Output | Rule Inherits the Same Output Element from Two Parent Classes | When a rule inherits the same output element from two parent classes, it's a potential issue, and a warning is issued. | Review the rule's inheritance structure and consider if it leads to unintended behavior. |
+
+When a descendant rule inherits the same output element from two different parent rules, situation known as the [diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#the-diamond-problem), YAMTL detects the situation and warns the user but the model transformation proceeds using inheritance semantics as explained above.
+
+
+!!! tip Using Rule Inheritance to Optimize Run Time
+
+    During pattern matching, YAMTL selects the most generic rules first. When a match is found for the parent rule, it then processes the match with the input pattern of the rules.
+
+!!! warning Multiple Rule Inheritance 
+
+    In the original YAMTL semantics, YAMTL supported multiple rule inheritance in both input patterns and output patterns. Since version 0.3.6, multiple inheritance only applies to output patterns in rules. This feature has been deprecated to facilitate more concise syntax when specifying input patterns in rules.
 
 ### Module Composition
 
 YAMTL modules can be imported and used in other Xtend/Java/Groovy classes by creating instances of their main classes. This allows you to reuse the functionality provided by a YAMTL module within your code. A YAMTL module can also incorporate any Java Virtual Machine (JVM) library, extending its functionality by utilizing external code.
 
-Module extension is used for composing modules i.e. creating a subclass of an existing module to extend the capabilities of the base module. When YAMTL modules are extended, the process of initializing rules and attribute helpers begins from the leaf modules (those that do not extend any other module). Initialization then proceeds along the hierarchy of extended modules, moving from parent modules to their descendants.
+Module extension is used for composing modules i.e. creating a subclass of an existing module to extend the capabilities of the base module. When YAMTL modules are extended, the process of initializing rules and attribute helpers begins from the root modules (those that do not extend any other module). Initialization then proceeds along the hierarchy of extended modules, moving from parent modules to their descendants.
 
-When a specializing module declares a rule that is already defined in the parent module, the new rule redefines the existing one if they have compatible signatures. This means that the importing module"s rule (child module) defines all elements of the rule from the imported module (parent module), and the type of each of such element in the child module must be a subtype of the type of the element in the parent module. This ensures that the specialization maintains compatibility with the base rule.
-
-Attribute helpers (``Helper()``) are redefined when extending modules because they do not have any parameters. Imported rules and attribute helpers that are redefined cannot be accessed any longer.
+When a specializing module declares a rule that is already defined in the parent module (by name), the new rule overrides the existing one. Rules in the parent module can also be extended using rule inheritance.
 
 ## Examples
 
