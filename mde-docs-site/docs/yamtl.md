@@ -200,6 +200,7 @@ A rule is declared using `rule("<name>")` with a rule name. The static operation
 
 Model transformations can be used to define model queries by using pattern matching, out-place model transformation by *mapping* an input model into a *new* output model, or in-place model transformations by *rewriting* a given model.
 
+
 ### Pattern Matching Semantics
 
 Pattern matching is the process by which YAMTL tries to find object graphs in the input model where the input pattern of a rule can be matched. 
@@ -263,7 +264,7 @@ query.execute()
 When using dynamic EMF for accessing metamodel metadata (i.e., EMF code has not been generated for the metamodel), use the static method `YAMTLModule::loadMetamodel("<path_to_metamodel>")`, which works with both Ecore files (`.ecore`) and with [EMFatic](https://eclipse.dev/emfatic/) files (`.emf`) to load the metamodel. Then instantiate the YAMTL module containing the model query, configure it to execute only the matching phase, load the input models and, finally, execute the query using the method `YAMTLModule::execute()`. 
 
 
-### Out-place Model-to-Model Transformation Semantics
+### Out-place Transformation Semantics
 
 YAMTL modules are typically used to specify model-to-model transformations, where the objects of an input model are mapped to objects of an output model that is created **from scratch**. This is commonly referred to as out-place transformation because the input model is read-only and not modified.
 
@@ -285,22 +286,16 @@ A lazy rule, whether unique or non-unique, requires explicit invocation to produ
 
 *   `fetch(<input_matched_object>, <out_object_name>, <rule_name>)` for lazy rules with a single input object and multiple output objects.
 *   `fetch(<input_matched_object>, <out_object_name>, <rule_name>, <i>)` for `toMany` lazy rules with a single input object and multiple output objects.
-
+*   `fetch(<input_matched_object>, <out_object_name>, <rule_name>, <argsMap>)` for lazy rules with a single input object and multiple output objects that, in addition, are parameterized. `<argsMap>` is a map of type `Map<String,Object>`, where the keys are parameter names and the values are the actual parameter values.
+  
 When the input pattern contains more than one element, instead of using one single input object, a [valid match](#pattern-matching-semantics) must be provided by using a map where the keys are ``<in_object_name>``s and the values are the matched `EObject`s.
-
 
 !!! warning 
     
     In a rule with an output element `.out(<out_object_name>, <out_object_type>, <ACTION>)`, the expression ``<ACTION>`` should only be used to initialize the output object of type `<out_object_type>` that is created by this output element.
 
 
-
-!!! danger "TODO"
-    
-    Rules with additional arguments.
-
-
-### In-place Model Transoformation Semantics
+### In-place Semantics
 
 
 !!! danger "TODO"
