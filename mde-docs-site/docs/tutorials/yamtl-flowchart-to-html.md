@@ -91,7 +91,7 @@ Some MTL examples also transform the Flowchart's subflow elements, so, another f
 
 This is a simple example that converts all flowchart elements into HTML `H1` headings:
 
-```
+``` groovy
 ruleStore([
     rule('Flowchart2Heading')
         .in("f", flowchartPk.Flowchart)
@@ -124,27 +124,32 @@ In this code snippet, 4 rules transform different flowchart objects: Flowchart, 
 
 First, an abstract rule is defined with a set of input and output elements. Then, a child rule is declared which inherits from the abstract rule (parent) and performs the transformation. YAMTL also supports multiple rule inheritance where a child rule can inherit from multiple parent rules.
 
-```
+``` groovy
 ruleStore([
+    // This parent rule is abstract, so it will not be applied directly
+    // but it can be executed by its children
     rule('Flowchart2H1')
-        .isAbstract()
-        .in("e", flowchartPk.Flowchart)
-        .out("h1", htmlPk.H1, {
-            h1.value = "Flowchart " + e.name
-        }),
+            .isAbstract()
+            .in("e", flowchartPk.Flowchart)
+            .out("h1", htmlPk.H1, {
+                h1.value = "Flowchart " + e.name
+            }),
 
+    // This child rule inherits from the previous one
     rule('Subflow2H1')
-        .inheritsFrom(['Flowchart2H1'])
-        .in("e", flowchartPk.Subflow)
-        .out("h1", htmlPk.H1, {
-            h1.value = "Subflow " + h1.value
-        })
+            .inheritsFrom(['Flowchart2H1'])
+            .in("e", flowchartPk.Subflow)
+            .out("h1", htmlPk.H1, {
+                // R.H.S. h1.value is inherited from the parent rule
+                // 'e' object is passed to the parent rule to calculate h1.value
+                h1.value = "Subflow " + h1.value
+            })
 ])
 ```
 
 ``isAbstract()`` clause is used to define an abstract rule. The abstract rule contains an input element of type `Flowchart` and an output element of H1 heading. The output object's value is updated to the input object's name with a prefix "Flowchart". A new child rule that inherits from the abstract rule using the `inheritsFrom(['<ruleNameList>'])` clause. The child rule `Subflow2H1` has an input element of type `Subflow` which extends `Flowchart`. Its name is `e` just like in the parent rule, meaning when the child rule is executed the input object `e`  overrides the object `e` in the parent rule. The output element's type must be the same as the parent rule. The output object's value is "Subflow " followed by the value of `h1` in the abstract rule because both rules are executed and the output objects are calculated. Thus, the final output is an H1 element of the following format:
 
-```
+``` xml
 <H1 value="Subflow Flowchart Snoozing"/>
 ```
 
@@ -152,7 +157,7 @@ ruleStore([
 
 There may be cases where you need to override the output object of the parent rule. This means that when the rule that inherits is executed, the value of the output object in the parent rule is overridden by the value of the output object calculated in the child rule. This also means that the child output object has no value at the start of execution unlike when it is inherited with no override.
 
-```
+``` groovy
 ruleStore([
     rule('Flowchart2H1')
         .in("e", flowchartPk.Flowchart)
@@ -160,20 +165,25 @@ ruleStore([
             //Assigns the name of the flowchart to the value of the h1 element
             h1.value = "Flowchart " + e.name 
         }),
+
     rule('Subflow2H1')
         .inheritsFrom(['Flowchart2H1'])
         .in("e", flowchartPk.Subflow)
-        .out("h1", htmlPk.H1, { 
+        .out("h1", htmlPk.H1, {
+            
             //If h1 value is inherited then it is not null, else it is null
             if(h1.value !== null) {
+                //R.H.S h1.value is already calculated and inherited
                 h1.value = "Subflow " + h1.value
             } else {
+                //h1 is newly initialised since rule is overridden
                 h1.value = "Subflow " + e.name //Overridden output object
             }
-        //Override the parent rule's h1 output object 
-        //so the one in child rule is used    
-        }).overriding() 
-    ])
+        //Override the parent rule so the child rule's h1 object is used    
+        }).overriding()
+        //Try out the above transformation without the overriding() method
+        //and see the difference in inheritance behaviour   
+])
 ```
 
 To better understand the properties of the `overriding()` clause, you should see the difference in execution and output, when you use override and when you do not.
@@ -182,7 +192,7 @@ When you **use** `overrding()`:
 
 The rule that inherits (`Subflow2H1`), overrides the parent rule's (`Flowchart2H1`) output object `h1` meaning its value is newly initialized (`null`), thus, the else-condition is invoked. The local input object `e` is referenced within the output block and its name (`e.name`) is retrieved to be assigned as part of a string to the value of `h1`. The output of this transformation would look like this:
 
-```
+``` xml
 <H1 value="Flowchart Wakeup"/>
 <H1 value="Subflow Snoozing"/>
 ```
@@ -191,7 +201,7 @@ When you **do not use** `overriding()`:
 
 When the child rule is executed, the output element(s) of the parent rule is calculated first. This means that `h1` output object has a computed value in the parent rule. When you access the `h1` output object in the child rule, it references to the parent rule's `h1` output object (which contains a value). Thus, the if-condition is satisfied and the child rule's output object `h1` is assigned the value of a string and the value of `h1` object calculated within the parent rule. The main output of this transformation would be:
 
-```
+``` xml
 <H1 value="Flowchart Wakeup"/>
 <H1 value="Subflow Flowchart Snoozing"/>
 ```
@@ -202,7 +212,7 @@ When the child rule is executed, the output element(s) of the parent rule is cal
 
 A lazy rule is a rule that is executed after all non-lazy rules. When multiple lazy rules are defined, then the lazy rules are invoked in sequential order.
 
-```
+``` groovy
 ruleStore([
     rule('Flowchart2Heading')
         .in('f', flowchartPk.Flowchart)
@@ -233,27 +243,29 @@ A `lazy` rule is called and not scheduled by the YAMTL engine, which may lead to
 
 Transient rules are rules whose output is not persisted in the target model. They are used to perform calculations and update objects in the target model. The transient clause is used to define a transient rule.
 
-```
+``` groovy
 // an attribute shared among rules
 def count = 0
 
 ruleStore([
-    rule('Transitions2Div')
-        .isTransient()
-        .endWith{count = div.children.size().toString()}
-        .in("f", flowchartPk.Flowchart)
-        .out("div", htmlPk.DIV, {
-            div.children.addAll(f.transitions)
-        }), 
-    rule('TransitionsCount')
-        .in("flowchart", flowchartPk.Flowchart)
-        .out("h1", htmlPk.H1, {
-            h1.value = "The ${flowchart.name} flowchart has ${count} transitions".toString()
-        })
+	rule('Transitions2Div')
+		.isTransient()
+		.in("t", flowchartPk.Transition)
+		.out("div", htmlPk.DIV, {
+			count++
+			println(count)
+		}),			
+	rule('FlowChart')
+		.in("f", flowchartPk.Flowchart)
+		.out("h1", htmlPk.H1, {
+			h1.value = "The ${f.name} flowchart has ${count} transitions"
+                        .toString()
+		})
+])
 ])
 ```
 
-In the above example, the `Transitions2Div` rule is declared as transient. The `endWith` block is used to update the `count` variable with the number of children in the `div` output object. The `TransitionsCount` rule is not transient and it has an input object of type `Flowchart` and an output object of type `H1`. The value of the `H1` output object is a string that contains the name of the flowchart and the value of the `count` variable.
+In the above example, the `Transitions2Div` rule is declared as transient. The `out` block is used to update the `count` variable with the number of children in the `div` output object, which happens automatically due to the number of transition elements (inputs) that match the rule. The `FlowChart` rule is not transient and it has an input object of type `Flowchart` and an output object of type `H1`. The value of the `H1` output object is a string that contains the name of the flowchart and the value of the `count` variable.
 
 <hr>
 
@@ -261,7 +273,7 @@ In the above example, the `Transitions2Div` rule is declared as transient. The `
 
 In this example, a filter condition (which is a lambda expression) is applied to a rule to transform selected input objects.
 
-```
+``` groovy
 ruleStore([
     rule('SelectedTransitions2Text')
         .in("t", flowchartPk.Transition)
@@ -283,7 +295,7 @@ The rule `SelectedTransitions2Text` has an input element as a `Transition` objec
 
 Derived elements are derived from input elements that have been matched in preceding input patterns of a rule. Here, the matching process is manually described instead of the automatic matching in matched elements.
 
-```
+``` groovy
 ruleStore([
     rule('Action2Heading')
         .in("a", flowchartPk.Action)
@@ -299,7 +311,7 @@ ruleStore([
 
 The rule `Action2Heading` contains an input object `b` that is derived from input object `a`'s first `Action` node. The output object `H1` is an HTML heading element with the value as the name of `b` input object. Note, that in the 'wakeup' flowchart model there are 4 `Action` elements so each of those is passed through the input patterns but since the `b` input object is derived from the first `Node` object of the `f` flowchart (`a`'s eContainer is the Flowchart object), the output will always be the name of the first node ('Wake up'). The result in the target model would look like this:
 
-```
+``` xml
 <H1 value="Wake up"/>
 <H1 value="Wake up"/>
 <H1 value="Wake up"/>
@@ -312,19 +324,29 @@ The rule `Action2Heading` contains an input object `b` that is derived from inpu
 
 If you want to transform multiple input objects into a single output object, you can do so by using the `in` clause multiple times. The input objects are matched in the order they are declared in the rule. Remember, the total number of input objects created is the **cartesian product** of the input objects of each input pattern. Usually, a filter is applied to the rule to ensure that the input objects are matched correctly and specifically chosen input objects are transformed.
 
-```
+``` groovy
 ruleStore([
     rule('SelectedTransitions2Text')
+        // This rule contains 3 input patterns
+        // Multiple sources create a cartesian product of output elements
+        // So filters are needed to avoid creating unwanted elements
         .in("a", flowchartPk.Action)
         .filter {
+            // Filter out those actions that do not have outgoing transitions
             !a.outgoing.isEmpty()
         }
         .in("d", flowchartPk.Decision)
         .in("t", flowchartPk.Transition)
         .filter{						
+                // Only transform actions that match the input transition name
+                // OR
+                // decision elements that contain the input transition name
                 a.outgoing.name[0] == t.name || d.outgoing.name.contains(t.name)
             }
         .out("p", htmlPk.P, {
+
+        // Create <p> elements with source, transition, and target info for action and decision elements
+        // Multiple duplicates of the decision element will be created showcasing the cartesian product behaviour
             if(a.outgoing.name[0] == t.name) {
                 p.value = "Source: ${a.name}; Transition: ${t.name}; Target: ${t.target.name}".toString()
             } else if(d.outgoing.name[0] == t.name) {
@@ -344,9 +366,11 @@ In the above example, the rule `SelectedTransitions2Text` has 3 input objects: `
 
 If you want to transform a single input object into multiple output objects, you can do so by using the `out` clause multiple times. The output objects are created in the order they are declared in the rule.
 
-```
+``` groovy
 ruleStore([
     rule('Action2Elements')
+        // This rule has 1 input pattern and 3 output patterns
+		// All output objects are mapped to the same input object
         .in("a", flowchartPk.Action).filter { !a.outgoing.isEmpty() }
         .out("title", htmlPk.H1, {
             title.value = a.name
@@ -356,7 +380,7 @@ ruleStore([
             link.ahref = a.outgoing.first().target.name
         })
         .out("container", htmlPk.DIV, {
-            // we can refer to output variables declared within the same rule directly
+            // output vars of the rule can be referred directly
             container.children.add(title)
             container.children.add(link)
         })
@@ -373,28 +397,40 @@ Matched rules can be declared with the modifier `toMany` that enables repeated r
 
 When the output pattern consists of several object patterns, we need to specify the output object that we want to fetch: `fetch(inputMatchedObject, outVarName)` will return the output object corresponding to the output variable `outVarName`. If a matched rule with a complex output pattern is also declared as `toMany`, then we can retrieve the output object with the expression `fetch(inputMatchedObject, outVarName, i)`.
 
-```
+``` groovy
 ruleStore([
     rule('Action2Elements')
-        .toMany()
-        .in("a", flowchartPk.Action).filter { !a.outgoing.isEmpty() }
+		.toMany()
+        .toManyCap({2})
+        .in("d", flowchartPk.Decision)
         .out("title", htmlPk.H1, {
-            title.value = a.name
+			// The value will differ every time the rule is re-applied
+			title.value = d.name 
         })
         .out("link", htmlPk.A, {
-            link.value = "Next steps"
-            link.ahref = a.outgoing.first().target.name
+			// Access the current number of rule application
+			// using matchCount variable
+			if (matchCount == 0) {
+				link.name = "Transition link 1"
+				link.value = fetch(d, "title", 0).value
+				link.ahref = d.outgoing[0].name
+			} else {
+				link.name = "Transition link 2"
+				link.value = fetch(d, "title", 1).value
+				link.ahref =  d.outgoing[1].name
+			}
         })
-        .out("container", htmlPk.DIV, {
-            //output variables declared within the same rule,
-            //can be referred directly
-            container.children.add(title)
-            container.children.add(link)
+        .out("container", htmlPk.DIV, {	
+			// Fetch the correct title and link for the current rule matching
+			container.value = "Decision ${matchCount+1}".toString()
+            container.children.add(fetch(d, "title", matchCount))
+            container.children.add(fetch(d, "link", matchCount))
         })
+
 ])
 ```
 
-The above excerpt contains just one rule `Action2Elements` with one input pattern and multiple output patterns. `toMany()` annotation is declared to represent the current case of multiple target objects. The input object only contains `Action` elements of the source flowchart model and a local filter requires that all `Action` elements satisfy the condition that outgoing transitions are not empty. The first output pattern has an output object of `H1` element type and the value of the output object `title` is set to be the name of the input object `a`. In the second output pattern, an output object `link` of the type `A` HTML element (used for hyperlinks) is defined. The `link` output object contains a value (a string expression) and a reference link `ahref` (name of the first outgoing transition's target). Finally, the third output pattern has the output object `container` of the type `DIV` HTML element. The output object `container` adds the other two output objects: `title` and `link` as its children. All output objects match to the same input object `a` and thus it is a one-to-many transformation.
+The above excerpt contains just one rule `Action2Elements` with one input pattern and multiple output patterns. `toManyCap({2})` means that the same rule is applied twice. This is useful to execute when the rule is needed to be executed multiple times to get different output or to get the same output multiple times. The `title` output object is an HTML heading element `H1` whose value is the name of the input object `d`. The `link` output object is an HTML hyperlink element `A`. `matchCount` variable store the value of the current cycle of rule application, it is always between 0 and n (`toManyCap{n}`). In the first cycle of rule application, the `link` name, value (fetched from `title` object of the same cycle `0`) and the reference link (name of the first outgoing transition's name) is set. In the second cycle, we implement similar but different attributes to showcase the use of `matchCount`. The `container` output object is an HTML div element `DIV` that contains the `title` and `link` output objects as its children. The corresponding value of the `i`th iteration of the rule application must be applied (in the third argument of `fetch()`), which is best set as `matchCount` variable. This means that in each cycle of rule execution, the title and link elements generated in that cycle are added to the container.
 
 <hr>
 
@@ -402,33 +438,32 @@ The above excerpt contains just one rule `Action2Elements` with one input patter
 
 If you want elements of a rule to interact with each other, you can do so at the end of a rule execution using an optional operation called `endWith`. An `endWith` block allows the user to group all elements of a rule, update objects and perform calculations using lamda expressions.
 
-```
+``` groovy
 ruleStore([
-    rule('Flowchart2Body') //Adds all flowchart elements into the HTML body
-        .in("f", flowchartPk.Flowchart) //Input object is all flowchart elements
-        .out("b", htmlPk.B, {
-            //Flowchart's name is turned into bold 
+    rule('Flowchart2Body')
+        //Notice there is one source and multiple targets
+        .in("f", flowchartPk.Flowchart)
+        .out("b", htmlPk.B, { 
+            //Flowchart's name is turned into bold
             b.value = f.name 
         })
         .out("div", htmlPk.DIV, {
-            //A div block contains all transitions 
+            //A div block contains all model transitions 
             div.children.addAll(f.transitions) 
         })
         .out("body", htmlPk.BODY, {
             //All flowchart nodes are added to the body
-            body.children.addAll(f.nodes) 
-        })
-        .endWith{
-            //Body's text field has the flowchart name
+            body.children.addAll(f.nodes)
+        })//Last block of the transformation to be executed
+        .endWith({
+            //You can access the input object(s)
             body.text = f.name
 
-            //The newly created bold text is also added to the body
-            body.children.add(b)
-
-            //New div block is also added
-            body.children.add(div)				 
-        }
-	])
+            //Similarly, you can access all output object(s)
+            body.children.add(b) 
+            body.children.add(div)
+    })
+])
 ```
 
 In the transformation example above, one source element `f` is transformed into multiple targets: `b` is a `Bold` HTML element that is assigned the flowchart's name as its value, `div` output object has all transitions of the flowchart `f` as its children, and `body` output object has all flowchart `f` nodes as its children. Once, all output blocks are executed, the `endWith` block is invoked. In the `endWith` block, a lambda expression is defined that updates the `body` output object's text field with the `f` flowchart's name and the `body` object also adds new children: `b` output object and `div` output object. These updates are shown in the output, found in the target model.
@@ -439,33 +474,37 @@ In the transformation example above, one source element `f` is transformed into 
 
 As the title suggests, you can prioritize rules to be executed in the order you prefer using the `priority(P)` clause where `P` is a whole number (e.g. 0, 1, 2,...) and the rules are executed in ascending values of ``P`` i.e. rules with lower `P` values have higher priority. 
 
-```
+``` groovy
 ruleStore([
+    //Run this rule first
     rule('Flowchart2Title')
         .priority(1)
         .in("f", flowchartPk.Flowchart)
         .out("title", htmlPk.TITLE, {
             title.value = f.name 
         }),
+    //Run this third
     rule('Action2Heading')
         .priority(3)
         .in("a", flowchartPk.Action)
         .out("h2", htmlPk.H2, {
             h2.value = "H2 heading for Action: " + a.name
-        }),			
+        }),
+    //Run this rule second			
     rule('Decision2Heading')
         .priority(2)
         .in("d", flowchartPk.Decision)
         .out("h1", htmlPk.H1, {
             h1.value = "H1 heading for Decision: " + d.name 
         }),
+    //Finally run this rule
     rule('Transition2Heading')
         .priority(4)
         .in("t", flowchartPk.Transition)
         .out("h3", htmlPk.H3, {
             h3.value = "H3 heading for Transition: " + t.name
         })	
-	])
+])
 ```
 
 In the MT definition above, the flow of execution for all the rules is:
@@ -487,7 +526,7 @@ Helpers offer reusable expressions for rules. They can be used to define static 
 * A **static operation** is a static method which is defined for the class. It is defined using the `staticOperation('<operationName>', { <operationBody> })` clause. The operation body is a lambda expression that has a list of parameters specified as an arguments map (`argMap`) which must return a value.  The operation can be accessed in a rule using the `<operationName>` variable.
 * A **contextual operation** is a bi-function that allows you to manipulate an argument object (could be an input or output object) and an argument map (which can be passed in between a rule and a helper). This a method invoked on a contextual instance of an object (first argument of the operation). It is defined using the `contextualOperation('<operationName>', { <operationBody> })` clause. The contextual operation body is a lambda expression that can contain two main arguments. The operation can be accessed in a rule using the `c_op` variable. The contextual operation is used to access the contextual instance of the input object and it must return either an `EObject` or a primitive value. The contextual instance is the input object that is matched in the input pattern of the rule. The contextual instance can be accessed in the operation body using the `obj` variable.
 
-```
+``` groovy
 ruleStore([
     rule('Action2Heading')
         .in("a", flowchartPk.Action)
@@ -538,7 +577,7 @@ In the example above, all flowchart elements are transformed into `H1` HTML head
 
 A model query is a rule that has an input pattern and no output pattern. It may have an `endWith` block to report error messages or compute metrics. The `query()` clause is used to define a model query. The transformation definition for a model query would look like this:
 
-```
+``` groovy
 ruleStore([
     rule('Transition')
         .in('t', flowchartPk.Transition)
@@ -551,9 +590,10 @@ ruleStore([
 
 Model queries require additional configuration when you execute the YAMTL module:
 
-```
-def mm = YAMTLModule.loadMetamodel(BASE_PATH + '/flowchart.ecore') as EPackage
-def query = new Query(mm)
+``` groovy
+def mm = YAMTLModule.preloadMetamodel(BASE_PATH + '/flowchart.ecore')
+def query = new Query(mm.contents[0])
+YAMTLGroovyExtensions.init(this)
 query.selectedExecutionPhases = ExecutionPhase.MATCH_ONLY
 query.loadInputModels(['in': BASE_PATH + '/wakeup.xmi'])
 query.execute()
@@ -565,13 +605,34 @@ The `selectedExecutionPhases` variable is set to `MATCH_ONLY` to only execute th
 
 ### Module Composition
 
-<!-- Need to complete this -->
+You also have the capability to extend a YAMTL module by inheriting from it. This is called module composition. The `extends` clause is used to inherit from a YAMTL module. The transformation definition for module composition would look like this:
+
+``` groovy
+class ModuleComposition extends Inheritance {
+	public ModuleComposition(EPackage flowchartPk, EPackage htmlPk) {
+		super(flowchartPk, htmlPk)
+ 
+		ruleStore([
+            rule('Subflow2H1')
+                .inheritsFrom(['Flowchart2H1'])
+                .in("e", flowchartPk.Subflow)
+                .out("h1", htmlPk.H1, {
+                    h1.value = "${h1.value}, where name of subflow is ${e.name}"
+                                .toString()							
+                })
+		])
+}}
+```
+
+`ModuleComposition` module extends the `Inheritance` module, which allows a rule to inherit from other rule(s) from a different module. The `inheritsFrom()` clause is used to inherit from a rule. The `Subflow2H1` rule inherits from the `Flowchart2H1` rule. The `h1` output object is updated to a string that contains the value of the `h1` output object from the `Flowchart2H1` rule and the name of the `Subflow` object `e`. The `ModuleComposition` module can be executed in the same way as the `Inheritance` module.
+
+<hr>
 
 ## Transformation Test Script
 
 The test script is responsible for loading source and target metamodels, initializing the MT definition, loading soure model into the transformation and executing it, and saving the output in the target model.
 
-```
+``` groovy
 // model transformation execution
 def srcRes = YAMTLModule.preloadMetamodel(BASE_PATH + '/flowchart.ecore') 
 def tgtRes = YAMTLModule.preloadMetamodel(BASE_PATH + '/html.ecore')
