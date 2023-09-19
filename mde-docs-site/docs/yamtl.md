@@ -976,14 +976,217 @@ When a descendant rule inherits the same output element from two different paren
 
 ## Module Composition
 
-YAMTL modules can be imported and used in other Xtend/Java/Groovy classes by creating instances of their main classes. This allows you to reuse the functionality provided by a YAMTL module within your code. A YAMTL module can also incorporate any Java Virtual Machine (JVM) library, extending its functionality by utilizing external code.
+YAMTL modules can be imported and used in other Xtend/Java/Groovy classes by creating instances of their main classes. This allows you to reuse the functionality provided by a YAMTL module within your code. A YAMTL module can also incorporate any Java Virtual Machine (JVM) library, extending its functionality by using external code.
 
 Module extension is used for composing modules i.e. creating a subclass of an existing module to extend the capabilities of the base module. When YAMTL modules are extended, the process of initializing rules and attribute helpers begins from the root modules (those that do not extend any other module). Initialization then proceeds along the hierarchy of extended modules, moving from parent modules to their descendants.
 
 When a specializing module declares a rule that is already defined in the parent module (by name), the new rule overrides the existing one. Rules in the parent module can also be extended using rule inheritance.
+
+
+## Incremental Model-to-Model Transformations
+
+By default model-to-model transformations in YAMTL transformations are executed in **batch mode**, where the entire input model is read and a new output model is produced from scratch. However, this approach can be inefficient when dealing with large models or when only a small portion of the model undergoes changes. To address this limitation, incremental model-to-model transformations have emerged as a more efficient alternative.
+
+**Incremental** model-to-model transformations in YAMTL extend the capabilities of standard transformations by maintaining a relationship between the source and target models. Rather than reprocessing the entire model, these transformations update only the parts of the target model that correspond to changed elements in the source model. This results in an increase in computational efficiency, particularly in scenarios where models are large, or changes are frequent but localized. 
+
+Incremental transformations are commonly used in the following scenarios:
+
+*  **Real-Time Systems**: In real-time systems where immediate responsiveness is essential, incremental transformations can deliver results more rapidly.
+*  **Collaborative Modeling**: In environments where multiple individuals are modifying a model simultaneously, incremental transformations help maintain a coherent and updated version of the target model.
+*  **Continuous Integration**: Incremental transformations are beneficial for continuous development pipelines that require constant model updates.
+
+YAMTL support for the incremental evaluation of model transformations relies on the following components:
+
+* Tracking transformation steps. Every application of a transformation rule to an input model constitutes a transformation step, which associates an input match with a corresponding output match. 
+In YAMTL, this tracking occurs implicitly, eliminating the need for user-initiated manual intervention. YAMTL also supports explicit mechanisms for tracking transformation steps.
+* Tracking feature calls. Structural features in the input model, typically corresponding to objects matched by the input pattern of a rule, are employed for computations within `<FILTER>`, `<QUERY>`, or `<ACTION>` blocks. YAMTL can identify the usage of an accessor method that commences with the get prefix to access a structural feature of an object in the input model. This detection is facilitated through aspect-oriented programming. To enable this functionality, the user must configure the YAMTLModule with the namespace containing the input model's classes. This is accomplished via the configuration option xform.adviseWithinThisNamespaceExpressions(`<namespaceList>`);, where xform is the YAMTLModule containing rule definitions, and `<namespaceList>`, of type `List<String>`, enumerates the namespaces to be instrumented with aspects. A namespace may be specified as a fully qualified package name, such as com.a.y, or may encompass a set of packages using `..*`, like  `com.a.y.*`, which includes package `com.a.y` and its direct subpackages, or `com.a.y..*`, which includes package `com.a.y` and *all* its subpackages.
+* Tracking changes in a model. Model changes can be classified into two categories: on-the-fly and offline changes. **On-the-fly** changes involve real-time modifications to the objects within a model in memory, whereas **offline** changes pertain to the application of a distinct model describing these alterations. YAMTL employs the EMF Adapter Framework for handling on-the-fly modifications, and utilises the EMF Change Model for processing offline changes. The EMF Change Model is equipped with a change recorder that is capable of serialising the in-memory change description model in XMI format.
+
+The execution of an incremental model transformation in YAMTL is performed in two stages:
+
+* **Initial stage**. The model transformation is executed in batch mode and YAMTL stores transformation steps.
+* **Change propagation stage**. Given a source model change (either on-the-fly or offline), YAMTL analyses the impact of the change on the model transformation and only re-evaluates those transformation steps that are affected.
+
+### Template to execute model transformations
+
+The following example code snippets illustrate how to configure and execute a transformation in YAMTL using different programming languages.
+
+#### Using On-the-Fly Changes
+
+The code snippets below ilustrate how to execute a model transformation in incremental mode, making a change to the input model once it has been transformed with `YAMTLModule::execute()`. 
+
+=== "Groovy"
+    ```groovy
+    // CONFIGURATION
+    def xform = new XForm()
+    YAMTLGroovyExtensions.init(this)		
+    xform.adviseWithinThisNamespaceExpressions(<namespaceList>);
+    xform.executionMode = ExecutionMode.INCREMENTAL
+    xform.loadInputModels(["<in_domain_name>": "<path_to_model>"])
+    // INITIAL TRANSFORMATION
+    xform.execute()
+    // DELTA PROPAGATION
+    xform.adaptInputModel("<in_domain_name>")
+    /* CHANGES TO MODEL HERE */
+    xform.propagateDelta("<in_domain_name>")
+    xform.saveOutputModels(["<out_domain_name>": "<path_to_model>"])
+    ```
+
+=== "Xtend"
+    ```xtend
+    // CONFIGURATION
+    val xform = new XForm()
+    xform.adviseWithinThisNamespaceExpressions(<namespaceList>)
+    xform.executionMode = ExecutionMode.INCREMENTAL
+    xform.loadInputModels(#{'<in_domain_name>' -> '<path_to_model>'})
+    // INITIAL TRANSFORMATION
+    xform.execute
+    // DELTA PROPAGATION
+    xform.adaptInputModel('<in_domain_name>')
+    // CHANGES TO MODEL HERE
+    xform.propagateDelta('<in_domain_name>')
+    xform.saveOutputModels(#{'<out_domain_name>' -> '<path_to_model>'})
+    ```
+
+=== "Java"
+    ```java
+    // CONFIGURATION
+    XForm xform = new XForm();
+    xform.adviseWithinThisNamespaceExpressions(<namespaceList>);
+    xform.setExecutionMode(ExecutionMode.INCREMENTAL);
+    xform.loadInputModels(Map.of("<in_domain_name>", "<path_to_model>"));
+    // INITIAL TRANSFORMATION
+    xform.execute();
+    // DELTA PROPAGATION
+    xform.adaptInputModel("<in_domain_name>");
+    // CHANGES TO MODEL HERE
+    xform.propagateDelta("<in_domain_name>");
+    xform.saveOutputModels(Map.of("<out_domain_name>", "<path_to_model>"));
+    ```
+
+=== "Kotlin"
+    ```kotlin
+    // CONFIGURATION
+    val xform = XForm()
+    xform.adviseWithinThisNamespaceExpressions(<namespaceList>)
+    xform.setExecutionMode = ExecutionMode.INCREMENTAL
+    xform.loadInputModels(mapOf("<in_domain_name>" to "<path_to_model>"))
+    // INITIAL TRANSFORMATION
+    xform.execute()
+    // DELTA PROPAGATION
+    xform.adaptInputModel("<in_domain_name>")
+    // CHANGES TO MODEL HERE
+    xform.propagateDelta("<in_domain_name>")
+    xform.saveOutputModels(mapOf("<out_domain_name>" to "<path_to_model>"))
+    ```
+
+Incremental transformations are activated by setting the execution mode to `ExecutionMode.INCREMENTAL`.
+
+The YAMTL engine is instructed on the locations for instrumenting `getter` methods through the statement `xform.adviseWithinThisNamespaceExpressions(<namespaceList>)`, specifying the pertinent package names.
+
+For change tracking, the `xform.adaptInputModel("<in_domain_name>")` statement is used to instrument the input model with EMF adapters. It is important to abstain from adapting the model prior to invoking `execute()`, in order to minimise the extent of changes requiring monitoring. Changes are made by accessing objects in the `Resource` of the input model, which can be accessed using `xform.getModelResource("<in_domain_name>")`, and applying changes to their structural features.
+
+Subsequently, the `xform.propagateDelta("<in_domain_name>")` statement facilitates the propagation of any changes made from the input model to the output model.
+
+#### Using Offline Changes
+
+=== "Groovy"
+    ```groovy
+    // CONFIGURATION
+    def xform = new XForm()
+    YAMTLGroovyExtensions.init(this)		
+    xform.adviseWithinThisNamespaceExpressions(<namespaceList>);
+    xform.executionMode = ExecutionMode.INCREMENTAL
+    xform.loadInputModels(["<in_domain_name>": "<path_to_model>"])
+    // INITIAL TRANSFORMATION
+    xform.execute()
+    // DELTA PROPAGATION
+    xform.loadDelta("<in_domain_name>", "<deltaName>", "<path/to/delta/file.xmi>")
+    xform.applyAndPropagateDelta("<in_domain_name>", "<deltaName>")
+    xform.saveOutputModels(["<out_domain_name>": "<path_to_model>"])
+    ```
+
+=== "Xtend"
+    ```xtend
+    // CONFIGURATION
+    val xform = new XForm()
+    xform.adviseWithinThisNamespaceExpressions(<namespaceList>)
+    xform.executionMode = ExecutionMode.INCREMENTAL
+    xform.loadInputModels(#{'<in_domain_name>' -> '<path_to_model>'})
+    // INITIAL TRANSFORMATION
+    xform.execute
+    // DELTA PROPAGATION
+    xform.loadDelta("<in_domain_name>", "<deltaName>", "<path/to/delta/file.xmi>")
+    xform.applyAndPropagateDelta("<in_domain_name>", "<deltaName>")
+    xform.saveOutputModels(#{'<out_domain_name>' -> '<path_to_model>'})
+    ```
+
+=== "Java"
+    ```java
+    // CONFIGURATION
+    XForm xform = new XForm();
+    xform.adviseWithinThisNamespaceExpressions(<namespaceList>);
+    xform.setExecutionMode(ExecutionMode.INCREMENTAL);
+    xform.loadInputModels(Map.of("<in_domain_name>", "<path_to_model>"));
+    // INITIAL TRANSFORMATION
+    xform.execute();
+    // DELTA PROPAGATION
+    xform.loadDelta("<in_domain_name>", "<deltaName>", "<path/to/delta/file.xmi>");
+    xform.applyAndPropagateDelta("<in_domain_name>", "<deltaName>");
+    xform.saveOutputModels(Map.of("<out_domain_name>", "<path_to_model>"));
+    ```
+
+=== "Kotlin"
+    ```kotlin
+    // CONFIGURATION
+    val xform = XForm()
+    xform.adviseWithinThisNamespaceExpressions(<namespaceList>)
+    xform.executionMode = ExecutionMode.INCREMENTAL
+    xform.loadInputModels(mapOf("<in_domain_name>" to "<path_to_model>"))
+    // INITIAL TRANSFORMATION
+    xform.execute()
+    // DELTA PROPAGATION
+    xform.loadDelta("<in_domain_name>", "<deltaName>", "<path/to/delta/file.xmi>")
+    xform.applyAndPropagateDelta("<in_domain_name>", "<deltaName>")
+    xform.saveOutputModels(mapOf("<out_domain_name>" to "<path_to_model>"))
+    ```
+
+The primary distinction when employing offline changes lies in the provision of changes to the input model via a change description model, as defined by the EMF Change Model[^2]. The statement `xform.loadDelta("<in_domain_name>", "<deltaName>", "<path/to/delta/file.xmi>")` loads the change stored at `<path/to/delta/file.xmi>`, subsequently associating it with the input model identified by `<in_domain_name>` and a user-defined name `<deltaName>`.
+
+[^2]: David Steinberg, Frank Budinsky, Marcelo Paternostro, and Ed Merks. 2009. EMF: Eclipse Modeling Framework 2.0 (2nd. ed.). Addison-Wesley Professional.
+
+For the propagation of this change, it first needs to be applied to the input model and then needs to be propagated to the output model. This is achieved via the statement `xform.applyAndPropagateDelta("<in_domain_name>", "<deltaName>")`.
+
+### Incrementality granularity
+
+YAMTL is an internal DSL of JVM programming languages and specific design decisions have been made in order to reuse as much syntax from the underlying host programming language as possible. In particular, assignments of values to object features (attributes and references) are handled by the assignment statement in the host language.
+
+In general terms, YAMTL checks whether a change invalidates the match of an existing transformation step. If the match is no longer valid, the transformation step is undone. Otherwise, the transformation step will be re-executed according to the following levels of granularity:
+
+* Tranformation step granularity (`IncrementalGranularity.TRAFO_STEP`): When a change impacts any part of a transformation step, the match whole transformation step is re-executed. This is the default granularity level.
+* Element granularity (`IncrementalGranularity.ELEMENT`): This is a more refined mode in which YAMTL detects whether a change only affects a particular `in` or `out` element. YAMTL only re-evaluates the filters of affected `in` elements and the actions of affected `out` elements.
+
+The granularity of the incremental evaluation scope is set using the flag ``YAMTLModule::incrementalGranularity``. By default, it is set to `IncrementalGranularity.TRAFO_STEP` and it can be set to `IncrementalGranularity.ELEMENT`.
+
+### Undo
+
+!!! todo 
+
+### Implicit vs explicit traceability
+
+!!! todo
 
 ## Examples
 
 * The [Linked list reversal](examples/linked-list-reversal-example.md) example reverses a linked list data structure originally stored in XMI format (source model). YAMTL transformation generates an ``outputList.xmi`` containing the target model. Both source and target metamodels are created using the same ECore file since the data structure remains the same after the transformation. A Gradle test runs a Groovy script that loads the input model, executes the transformation, and saves the output model.
 
 * [Flowchart to HTML](examples/flowchart-to-html-example.md) project looks at transforming flowchart models into valid HTML documents. This project specifically has multiple transformation examples that cover a wide range of YAMTL operations, annotations, and core concepts. This project is perfect for readers who want to take the next step in learning more about the complete functionality of each MTL tool in well-documented bite-sized examples.
+
+
+## Trade-offs regarding performance
+
+!!! todo 
+
+* Groovy vs Xtend/Java: Groovy offers a more readable syntax
+* SpringAOP vs AspectJ: SpringAOP simplifies configuration
+
