@@ -9,7 +9,7 @@ This website also uses a manually installed plug-in for time stamping content. S
 
 **For WINDOWS USERS: Make sure to define the mkdocs path in the environment variable path as it is necessary.**
 
-Head over to the ``mde-docs-site`` folder which is the **main directory** of this project. You can start editing the webpages found in the ``docs`` folder. To live preview the edits, use terminal to navigate to the project's main directory and run:
+The ``./mde-docs.github.io`` folder is the **main directory** of this project. You can start editing the webpages found in the ``docs`` folder. To live preview the edits, use terminal to navigate to the main directory (this directory) and run:
 
 `mkdocs serve`
 
@@ -20,3 +20,15 @@ IMPORTANT: ``assets/`` contains additional links which are relatively accessed f
 To build the website, once you've finished editing do:
 
 `mkdocs build`
+
+## Project Structure
+
+The project directory structure is as follows:
+
+* Markdown files ending with `.md` inside the `docs/` folder are the main content of the site. These are the landing page (`index.md`) and the MTL related pages (`etl.md`, `yamtl.md` and `epsilon.md`). **Note:** documentation for MTL tools can be found in the `Model Transformation Languages` section of the live website.
+
+* `docs/assets` folder contains the external files embedded into the site like images and download files.
+
+* `docs/examples` folder has the problem description pages for each of the documented examples. You can find different MTL solutions to each case within the example pages.
+
+* `docs/tutorials` folder includes the MTL solutions (either in ETL or YAMTL) for all example cases. Each solution is explained thoroughly and the project setup is clearly stated. **Note:** these pages are referred within the example pages (`docs/examples`) so that the examples are documented in a case-solution format.
