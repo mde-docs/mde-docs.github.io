@@ -45,7 +45,7 @@ The source metamodel is defined using Emfatic (.emf), which can be converted int
 
 ### Class Diagram
 
-![Flowchart Class Diagram](../assets/images/flowchart-class-diagram.jpg)
+![Flowchart Class Diagram](../assets/images/flowchart-class-diagram.png)
 
 ### Code Implementation
 
