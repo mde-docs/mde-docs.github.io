@@ -41,6 +41,8 @@ nav:
   - Examples:
     - Linked List Reversal: 'examples/linked-list-reversal-example.md'
     - Flowchart to HTML: 'examples/flowchart-to-html-example.md'
+  - Exercises:
+    - Flowchart to HTML: 'exercises/flowchart-to-html-worksheet.md'
 
 
 markdown_extensions: 
