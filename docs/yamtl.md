@@ -89,14 +89,14 @@ First, you need to create a Gradle project in your IDE. Here, are the ways to do
 
 YAMTL uses Gradle as build automation tool and can be executed from Java-SE 17. To add YAMTL to your project you must configure the Gradle build script (``build.gradle``) of your project.
 Add the Groovy plugin (at the top of the ``build.gradle`` file):
-```
+``` groovy
 plugins {
     id "groovy"
 }
 ```
 
 Add the following repositories:
-```
+``` groovy
 repositories {
 	maven{ url 'https://github.com/yamtl/yamtl.github.io/raw/master/mvn-repo/snapshot-repo' }
 	mavenCentral()
@@ -104,7 +104,7 @@ repositories {
 ```
 
 Then declare the dependencies (EMF dependencies are optional but since many metamodels use EMF format, it is advised you include it):
-```
+``` groovy
 dependencies {
     // YAMTL dependencies
     implementation "yamtl:yamtl:${yamtlVersion}"
@@ -136,7 +136,7 @@ You are now ready to use your YAMTL project! Let's now learn how to create a mod
 
 * First, create a transformation script in `src/main/groovy` folder (you could also add a package to use multiple scripts) with the  `.groovy` suffix. Then, import a few YAMTL and EMF libraries:
 
-```
+``` yamtl-groovy
 import static yamtl.dsl.Rule.*
 import org.eclipse.emf.ecore.EPackage
 import yamtl.core.YAMTLModule
@@ -151,31 +151,31 @@ class FirstExample extends YAMTLModule
 
 * Define a new public method `FirstExample` and pass the source and target metamodels of `EPackage` type as parameters (Ecore metamodel files are accessed through `EPackage`). **Note:** Depending on your case, you may have the same source and target metamodels so you can just pass one parameter.
 
-```
+``` groovy
 public FirstExample(EPackage sourcePk, EPackage targetPk)
 ```
 
 **OR**, if both source and target metamodels are the same:
 
-```
-public FirstExample(EPackage llPk)
+``` groovy
+public FirstExample(EPackage metamodelPk)
 ```
 
 * To enable EMF functionality to the YAMTL module, initialize an EMF extension:
 
-```
+``` groovy
 YAMTLGroovyExtensions_dynamicEMF.init(this)
 ```
 
 * Within the constructor, a `header()` is required to define the signature of the transformation: declaration of input and output models. `.in()` clause defines the characteristics of the input model, where the first parameter is the model's name in quotation marks `""` and the second parameter is the metamodel to which the input model conforms. The same applies to the output model definition within the `.out()` clause. 
 
-```
+``` groovy
 header().in("in", sourcePk).out("out", targetPk)
 ```
 
 * Next is the `ruleStore()` which contains a list of rule(s). Each rule has one or more input elements which are transformed to one or more output elements. The concrete syntax for rules is described in the next section.
 
-```
+``` yamtl-groovy
 ruleStore([
     rule('LinkedList2LinkedList')
 				.in('s', llPk.LinkedList)
@@ -195,7 +195,7 @@ ruleStore([
 
 * You can also add optional helpers that can perform computations of values during the initialization of the transformation. Helpers are contained as a list within the `helperStore()` operation.
 
-```
+``` yamtl-groovy
 helperStore([
     //Helpers
 ])
@@ -247,7 +247,7 @@ A YAMTL model transformation is defined as a class that specializes the `YAMTLMo
 
 === "Groovy"
 
-    ```groovy
+    ```yamtl-groovy
     class <name> extends YAMTLModule {
         public <name> (EPackage <pk1>, EPackage <pk2>) {
             YAMTLGroovyExtensions_dynamicEMF.init(this)
@@ -260,7 +260,7 @@ A YAMTL model transformation is defined as a class that specializes the `YAMTLMo
 
 === "Xtend"
 
-    ```xtend
+    ```yamtl-xtend
     class <name> extends YAMTLModule {
         new(EPackage <pk1>, EPackage <pk2>) {
             header().in(<in_domain_name1>,<pk1>).out(<in_domain_name2>,<pk2>)
@@ -272,7 +272,7 @@ A YAMTL model transformation is defined as a class that specializes the `YAMTLMo
 
 === "Java"
 
-    ```java
+    ```yamtl-java
     public class <name> extends YAMTLModule {
         public <name>(EPackage <pk1>, EPackage <pk2>) {
             header().in(<in_domain_name1>,<pk1>).out(<in_domain_name2>,<pk2>);
@@ -284,7 +284,7 @@ A YAMTL model transformation is defined as a class that specializes the `YAMTLMo
 
 === "Kotlin"
 
-    ```kotlin
+    ```yamtl-kotlin
     class <name>(<pk1>: EPackage, <pk2>: EPackage) : YAMTLModule() {
         init {
             header().`in`(<in_domain_name1>,<pk1>).out(<in_domain_name2>,<pk2>)
@@ -722,7 +722,7 @@ Attribute helpers shine when used with the `allInstances(<EClass>)` operation. T
 
 === "Groovy"
 
-    ```groovy
+    ``` yamtl-groovy
     staticAttribute("<AttributeName>", {  
         // an expression returning a value from allInstances(<InputEClass>)
     })
@@ -730,7 +730,7 @@ Attribute helpers shine when used with the `allInstances(<EClass>)` operation. T
 
 === "Xtend"
 
-    ```xtend
+    ``` yamtl-xtend
     staticAttribute("<AttributeName>", [|  
         // an expression returning a value from allInstances(<InputEClass>)
     ])
@@ -738,7 +738,7 @@ Attribute helpers shine when used with the `allInstances(<EClass>)` operation. T
 
 === "Java"
 
-    ```java
+    ``` yamtl-java
     staticAttribute("<AttributeName>", new Supplier<Object>() {  
         @Override
         public Object get() {
@@ -749,7 +749,7 @@ Attribute helpers shine when used with the `allInstances(<EClass>)` operation. T
 
 === "Kotlin"
 
-    ```kotlin
+    ```yamtl-kotlin
     staticAttribute("<AttributeName>") {  
         // an expression returning a value from allInstances(<InputEClass>)
     }
@@ -765,19 +765,19 @@ An attribute helper can then be called by name. While the YAMTL Groovy DSL allow
 
 === "Xtend"
 
-    ```xtend
+    ``` yamtl-xtend
     fetch("<AttributeName>")
     ```
 
 === "Java"
 
-    ```java
+    ``` yamtl-java
     fetch("<AttributeName>")
     ```
 
 === "Kotlin"
 
-    ```kotlin
+    ``` yamtl-kotlin
     fetch("<AttributeName>")
     ```
 
@@ -787,7 +787,7 @@ To manage static methods, YAMTL uses `staticOperation("<name>", <FUNCTION>)` to 
 
 === "Groovy"
 
-    ```groovy
+    ``` yamtl-groovy
     staticOperation("<OperationName>", { argMap -> 
         // returns the value of the parameter with name <param_name>
         argMap.<param_name> 
@@ -796,7 +796,7 @@ To manage static methods, YAMTL uses `staticOperation("<name>", <FUNCTION>)` to 
 
 === "Xtend"
 
-    ```xtend
+    ``` yamtl-xtend
     staticOperation("<OperationName>", [ argMap | 
         // returns the value of the parameter with name <param_name>
         argMap.get("<param_name>")
@@ -805,7 +805,7 @@ To manage static methods, YAMTL uses `staticOperation("<name>", <FUNCTION>)` to 
 
 === "Java"
 
-    ```java
+    ``` yamtl-java
     staticOperation("<OperationName>", argMap -> {
         // returns the value of the parameter with name <param_name>
         return argMap.get("<param_name>");
@@ -814,7 +814,7 @@ To manage static methods, YAMTL uses `staticOperation("<name>", <FUNCTION>)` to 
 
 === "Kotlin"
 
-    ```kotlin
+    ``` yamtl-kotlin
     staticOperation("<OperationName>") { argMap ->
         // returns the value of the parameter with name <param_name>
         argMap["<param_name>"]
@@ -831,19 +831,19 @@ Static operations are invoked by their names and the list of arguments, specifyi
 
 === "Xtend"
 
-    ```xtend
+    ``` yamtl-xtend
     fetch("<OperationName>", #["<param1>" -> <value1>, ...])
     ```
 
 === "Java"
 
-    ```java
+    ``` yamtl-java
     fetch("<OperationName>", Map.of("<param1>", <value1>, ...));
     ```
 
 === "Kotlin"
 
-    ```kotlin
+    ``` yamtl-kotlin
     fetch("<OperationName>", mapOf("<param1>" to <value1>, ...))
     ```
 
@@ -853,7 +853,7 @@ To manage class methods, YAMTL uses `contextualOperation("<name>", <BIFUNCTION>)
 
 === "Groovy"
 
-    ```groovy
+    ``` yamtl-groovy
     staticOperation("<OperationName>", { obj, argMap -> 
         // to access the contextual instance use 'obj' 
         // to access an argument use 'argMap.<param_name>' 
@@ -863,7 +863,7 @@ To manage class methods, YAMTL uses `contextualOperation("<name>", <BIFUNCTION>)
 
 === "Xtend"
 
-    ```xtend
+    ``` yamtl-xtend
     contextualOperation("<OperationName>", [ obj, argMap | 
         // to access the contextual instance use 'obj' 
         // to access an argument use 'argMap.get("<param_name>")' 
@@ -873,7 +873,7 @@ To manage class methods, YAMTL uses `contextualOperation("<name>", <BIFUNCTION>)
 
 === "Java"
 
-    ```java
+    ``` yamtl-java
     contextualOperation("<OperationName>", (obj, argMap) -> {
         // to access the contextual instance use 'obj'
         // to access an argument use 'argMap.get("<param_name>")'
@@ -883,7 +883,7 @@ To manage class methods, YAMTL uses `contextualOperation("<name>", <BIFUNCTION>)
 
 === "Kotlin"
 
-    ```kotlin
+    ``` yamtl-kotlin
     contextualOperation("<OperationName>") { obj, argMap ->
         // to access the contextual instance use 'obj'
         // to access an argument use 'argMap["<param_name>"]'
@@ -895,25 +895,25 @@ Contextual operations are invoked on the `<ContextualInstance>` using the `<Oper
 
 === "Groovy"
 
-    ```groovy
+    ``` yamtl-groovy
     <OperationName>(<ContextualInstance>, ["<param1>" : <value1>, ...])
     ```
 
 === "Xtend"
 
-    ```xtend
+    ``` yamtl-xtend
     <ContextualInstance>.fetch("<OperationName>", #["<param1>" -> <value1>, ...])
     ```
 
 === "Java"
 
-    ```java
+    ``` yamtl-java
     fetch(<ContextualInstance>, "<OperationName>", Map.of("<param1>", <value1>, ...));
     ```
 
 === "Kotlin"
 
-    ```kotlin
+    ``` yamtl-kotlin
     fetch(<ContextualInstance>, "<OperationName>", mapOf("<param1>" to <value1>, ...))
     ```
 
