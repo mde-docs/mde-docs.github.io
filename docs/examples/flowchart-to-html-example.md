@@ -43,7 +43,7 @@ Now, let's see how the models are defined.
 
 The source metamodel is defined using Emfatic (.emf), which can be converted into an `ECore` file. You can then access the flowchart classes as `EPackage`s (`ECore` has `EClasses` which are referenced as `EPackage` in Groovy) to be used within the MT definition. 
 
-```
+``` emfatic
 @namespace(uri="flowchart", prefix="flowchart")
 package flowchart;
 
@@ -83,7 +83,7 @@ class Subflow extends Flowchart, Node {
 
 Just like before, the target metamodel is also defined using Emfatic. The metamodel script is long because all HTML elements must be defined so that the transformation generates a valid HTML document.
 
-```
+``` emfatic
 package HTML;
   
   class HTML {
@@ -380,7 +380,7 @@ package HTML;
 ## Source Model
 
 A sample source model representing the flowchart (can be altered in an MTL solution) in Flexmi format is as follows:
-```
+``` xml
 <flowchart>
     <action name="Wake up" incoming="some time passes, start" outgoing=""/>
     <decision name="Is it too early?" incoming="" outgoing="yes, no"/>

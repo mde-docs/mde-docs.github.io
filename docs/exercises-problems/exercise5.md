@@ -54,7 +54,7 @@ Once you have completed all the steps you can run the Groovy script. In the targ
 
 Transformation class containing the MT definition. All rules **must** be defined in the `ruleStore()`.
 
-``` groovy
+``` yamtl-groovy
 package flowchartToHtmlExamples
 import static yamtl.dsl.Rule.*
 import org.eclipse.emf.ecore.EPackage

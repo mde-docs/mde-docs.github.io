@@ -26,7 +26,7 @@ There are 2 aspects of the linked list which are changed from the source model t
 
 The YAMTL definition is in a Groovy script as follows: 
 
-``` linenums="1" title="Snippet from ReverseLinkedList.groovy"
+``` yamtl-groovy linenums="1" title="Snippet from ReverseLinkedList.groovy"
 class ReverseLinkedList extends YAMTLModule {
 	public ReverseLinkedList(EPackage llPk) {
 		YAMTLGroovyExtensions_dynamicEMF.init(this)
@@ -69,7 +69,7 @@ In Line 18, all ``Node`` objects in the source model are queried to find a ``Nod
 
 Besides the actual transformation definition, you will also need a Groovy test script that automates the entire transformation process. Here, the relevant project files are configured and test assertions are implemented. Check out a snippet from the test script for the linked list reversal example below:
 
-``` linenums="1" title="Snippet from ReverseLinkedListTest.groovy"
+``` groovy linenums="1" title="Snippet from ReverseLinkedListTest.groovy"
 // model transformation execution example
 def metamodel = YAMTLModule.loadMetamodel(BASE_PATH + '/LinkedList.ecore') as EPackage
 def xform = new ReverseLinkedList(metamodel)
@@ -83,7 +83,7 @@ The transformation is executed through a Gradle build run which also runs this t
 
 ### Source and Target Metamodel
 
-``` title="LinkedList.emf"
+``` emfatic title="LinkedList.emf"
 @namespace(uri="linkedlist", prefix="")
 package linkedlist;
 
@@ -109,7 +109,7 @@ The Emfatic textual syntax is used to define the metamodel. The corresponding EC
 </figure>
 
 **XMI serialization of the Abstract Syntax**
-``` title="inputList.xmi"
+``` xml title="inputList.xmi"
 <?xml version="1.0" encoding="UTF-8"?>
 <LinkedList
 	xmi:version="2.0"
@@ -133,7 +133,7 @@ The source model conforms to the source metamodel (``LinkedList.emf``). The Groo
 </figure>
 
 **XMI serialization of the Abstract Syntax**
-``` title="outputList.xmi"
+``` xml title="outputList.xmi"
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <LinkedList
   xmi:version="2.0"

@@ -40,7 +40,7 @@ This is the HTML metamodel in Emfatic `.emf` as defined in the [Flowchart to HTM
 
 Let's turn that flowchart into an XMI representation because that is the required format for source models in YAMTL (note that this is equivalent to the Flexmi code shown on the previous page):
 
-```
+``` xml
 <?xml version="1.0" encoding="UTF-8"?>
 <flowchart:Flowchart xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:flowchart="flowchart" xmi:id="_9mLMwDY6EeOwt8pm-kjW_Q" name="Wakeup">
   <nodes xsi:type="flowchart:Action" xmi:id="_9mLMwTY6EeOwt8pm-kjW_Q" name="Wake up" outgoing="_9mLMxjY6EeOwt8pm-kjW_Q" incoming="_9mLMyDY6EeOwt8pm-kjW_Q _9mLz0TY6EeOwt8pm-kjW_Q"/>
@@ -66,7 +66,7 @@ Some MTL examples also transform the Flowchart's subflow elements, so, another f
 
 **Abstract Syntax in XMI**
 
-```
+``` xml
 <?xml version="1.0" encoding="UTF-8"?>
 <flowchart:Flowchart xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:flowchart="flowchart" xmi:id="_9mLMwDY6EeOwt8pm-kjW_Q" name="Wakeup">
   <nodes xsi:type="flowchart:Action" xmi:id="_9mLMwTY6EeOwt8pm-kjW_Q" name="Wake up" outgoing="_9mLMxjY6EeOwt8pm-kjW_Q" incoming="_9mLMyDY6EeOwt8pm-kjW_Q _9mLz0TY6EeOwt8pm-kjW_Q"/>
@@ -91,7 +91,7 @@ Some MTL examples also transform the Flowchart's subflow elements, so, another f
 
 This is a simple example that converts all flowchart elements into HTML `H1` headings:
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('Flowchart2Heading')
         .in("f", flowchartPk.Flowchart)
@@ -124,7 +124,7 @@ In this code snippet, 4 rules transform different flowchart objects: Flowchart, 
 
 First, an abstract rule is defined with a set of input and output elements. Then, a child rule is declared which inherits from the abstract rule (parent) and performs the transformation. YAMTL also supports multiple rule inheritance where a child rule can inherit from multiple parent rules.
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     // This parent rule is abstract, so it will not be applied directly
     // but it can be executed by its children
@@ -157,7 +157,7 @@ ruleStore([
 
 There may be cases where you need to override the output object of the parent rule. This means that when the rule that inherits is executed, the value of the output object in the parent rule is overridden by the value of the output object calculated in the child rule. This also means that the child output object has no value at the start of execution unlike when it is inherited with no override.
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('Flowchart2H1')
         .in("e", flowchartPk.Flowchart)
@@ -212,7 +212,7 @@ When the child rule is executed, the output element(s) of the parent rule is cal
 
 A lazy rule is a rule that is executed after all non-lazy rules. When multiple lazy rules are defined, then the lazy rules are invoked in sequential order.
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('Flowchart2Heading')
         .in('f', flowchartPk.Flowchart)
@@ -243,7 +243,7 @@ A `lazy` rule is called and not scheduled by the YAMTL engine, which may lead to
 
 Transient rules are rules whose output is not persisted in the target model. They are used to perform calculations and update objects in the target model. The transient clause is used to define a transient rule.
 
-``` groovy
+``` yamtl-groovy
 // an attribute shared among rules
 def count = 0
 
@@ -273,7 +273,7 @@ In the above example, the `Transitions2Div` rule is declared as transient. The `
 
 In this example, a filter condition (which is a lambda expression) is applied to a rule to transform selected input objects.
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('SelectedTransitions2Text')
         .in("t", flowchartPk.Transition)
@@ -295,7 +295,7 @@ The rule `SelectedTransitions2Text` has an input element as a `Transition` objec
 
 Derived elements are derived from input elements that have been matched in preceding input patterns of a rule. Here, the matching process is manually described instead of the automatic matching in matched elements.
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('Action2Heading')
         .in("a", flowchartPk.Action)
@@ -324,7 +324,7 @@ The rule `Action2Heading` contains an input object `b` that is derived from inpu
 
 If you want to transform multiple input objects into a single output object, you can do so by using the `in` clause multiple times. The input objects are matched in the order they are declared in the rule. Remember, the total number of input objects created is the **cartesian product** of the input objects of each input pattern. Usually, a filter is applied to the rule to ensure that the input objects are matched correctly and specifically chosen input objects are transformed.
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('SelectedTransitions2Text')
         // This rule contains 3 input patterns
@@ -366,7 +366,7 @@ In the above example, the rule `SelectedTransitions2Text` has 3 input objects: `
 
 If you want to transform a single input object into multiple output objects, you can do so by using the `out` clause multiple times. The output objects are created in the order they are declared in the rule.
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('Action2Elements')
         // This rule has 1 input pattern and 3 output patterns
@@ -397,7 +397,7 @@ Matched rules can be declared with the modifier `toMany` that enables repeated r
 
 When the output pattern consists of several object patterns, we need to specify the output object that we want to fetch: `fetch(inputMatchedObject, outVarName)` will return the output object corresponding to the output variable `outVarName`. If a matched rule with a complex output pattern is also declared as `toMany`, then we can retrieve the output object with the expression `fetch(inputMatchedObject, outVarName, i)`.
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('Action2Elements')
 		.toMany()
@@ -438,7 +438,7 @@ The above excerpt contains just one rule `Action2Elements` with one input patter
 
 If you want elements of a rule to interact with each other, you can do so at the end of a rule execution using an optional operation called `endWith`. An `endWith` block allows the user to group all elements of a rule, update objects and perform calculations using lamda expressions.
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('Flowchart2Body')
         //Notice there is one source and multiple targets
@@ -474,7 +474,7 @@ In the transformation example above, one source element `f` is transformed into 
 
 As the title suggests, you can prioritize rules to be executed in the order you prefer using the `priority(P)` clause where `P` is a whole number (e.g. 0, 1, 2,...) and the rules are executed in ascending values of ``P`` i.e. rules with lower `P` values have higher priority. 
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     //Run this rule first
     rule('Flowchart2Title')
@@ -526,7 +526,7 @@ Helpers offer reusable expressions for rules. They can be used to define static 
 * A **static operation** is a static method which is defined for the class. It is defined using the `staticOperation('<operationName>', { <operationBody> })` clause. The operation body is a lambda expression that has a list of parameters specified as an arguments map (`argMap`) which must return a value.  The operation can be accessed in a rule using the `<operationName>` variable.
 * A **contextual operation** is a bi-function that allows you to manipulate an argument object (could be an input or output object) and an argument map (which can be passed in between a rule and a helper). This a method invoked on a contextual instance of an object (first argument of the operation). It is defined using the `contextualOperation('<operationName>', { <operationBody> })` clause. The contextual operation body is a lambda expression that can contain two main arguments. The operation can be accessed in a rule using the `c_op` variable. The contextual operation is used to access the contextual instance of the input object and it must return either an `EObject` or a primitive value. The contextual instance is the input object that is matched in the input pattern of the rule. The contextual instance can be accessed in the operation body using the `obj` variable.
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('Action2Heading')
         .in("a", flowchartPk.Action)
@@ -577,7 +577,7 @@ In the example above, all flowchart elements are transformed into `H1` HTML head
 
 A model query is a rule that has an input pattern and no output pattern. It may have an `endWith` block to report error messages or compute metrics. The `query()` clause is used to define a model query. The transformation definition for a model query would look like this:
 
-``` groovy
+``` yamtl-groovy
 ruleStore([
     rule('Transition')
         .in('t', flowchartPk.Transition)
@@ -607,7 +607,7 @@ The `selectedExecutionPhases` variable is set to `MATCH_ONLY` to only execute th
 
 You also have the capability to extend a YAMTL module by inheriting from it. This is called module composition. The `extends` clause is used to inherit from a YAMTL module. The transformation definition for module composition would look like this:
 
-``` groovy
+``` yamtl-groovy
 class ModuleComposition extends Inheritance {
 	public ModuleComposition(EPackage flowchartPk, EPackage htmlPk) {
 		super(flowchartPk, htmlPk)

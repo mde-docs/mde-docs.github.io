@@ -70,7 +70,7 @@ HINT: the syntax for fetch operation in this example is `fetch(<inputMatchedObje
 
 Transformation class containing the MT definition. All rules are defined in the `ruleStore()`.
 
-``` groovy
+``` yamtl-groovy
 package flowchartToHtmlExamples
 import static yamtl.dsl.Rule.*
 import org.eclipse.emf.ecore.EPackage

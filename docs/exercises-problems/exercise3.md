@@ -52,7 +52,7 @@ Define the next rule as ‘Subflow2H1’ and add the tag inheritsFrom which requ
 
 Transformation class containing the MT definition. All rules are defined in the `ruleStore()`.
 
-``` groovy
+``` yamtl-groovy
 package flowchartToHtmlExamples
 import static yamtl.dsl.Rule.*
 import org.eclipse.emf.ecore.EPackage

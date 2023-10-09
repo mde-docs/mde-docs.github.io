@@ -79,7 +79,7 @@ ETL also allows users to declare ``pre`` and ``post`` blocks which are executed 
 
 The basic format of an ETL document is as follows: 
 
-```
+``` etl
 rule <name>
     transform <sourceParameterName>:<sourceParameterType>
     to <targetParameterName>:<targetParameterType>
@@ -96,7 +96,7 @@ Name of a ``rule`` is uniquely identified within an ETL module and it can contai
 
 ETL can also have optional attributes and statements that increase usability of the tool. The options are structured in the following manner:
 
-```
+``` etl
 (@abstract)?
 (@lazy)?
 (@primary)?
@@ -209,7 +209,7 @@ edge.target ::= t.parent;
 
 EOL statements can provide interactive capabilities for ETL transformations. In the example below, ``Tree2Node`` rule is modified by adding a ``guard`` statement that uses EOL's user-input method (`UserInput.confirm(String,Boolean)`) to ask for user's permission and confirmation of selecting specific Tree elements that need to be transformed to Node elements. The confirmation prompt appears at runtime hence making the model transformation interactive.
 
-```
+``` etl
 rule Tree2Node
     transform t : Tree!Tree
     to n : Graph!Node {

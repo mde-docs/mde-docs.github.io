@@ -4,7 +4,7 @@
 
 Transformation class containing the MT definition. All rules are defined in the `ruleStore()`.
 
-``` groovy
+``` yamtl-groovy
 package flowchartToHtmlExamples
 import static yamtl.dsl.Rule.*
 
@@ -39,7 +39,7 @@ class Example1 extends YAMTLModule {
 
 The correct transformation definition for this problem is:
 
-``` groovy
+``` yamtl-groovy
 package flowchartToHtmlExamples
 import static yamtl.dsl.Rule.*
 import org.eclipse.emf.ecore.EPackage

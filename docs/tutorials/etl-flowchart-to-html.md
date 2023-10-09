@@ -40,7 +40,7 @@ This is the HTML metamodel in Emfatic `.emf` as defined in the [Flowchart to HTM
 
 The flowchart diagram can be represented in Flexmi with some changes (outgoing and incoming transitions of `Node` elements are removed because they cause syntactical errors for nodes with multiple transitions):
 
-```
+``` xml
 <flowchart>
     <action name="Wake up"/>
     <decision name="Is it too early?"/>
@@ -63,7 +63,7 @@ Some MTL examples also transform the Flowchart's subflow elements, so, another f
 
 **Abstract Syntax in Flexmi**
 
-```
+``` xml
 <flowchart>
     <action name="Wake up"/>
     <action name="Get up"/>
@@ -86,7 +86,7 @@ Some MTL examples also transform the Flowchart's subflow elements, so, another f
 
 This ETL definition converts a flowchart model to an HTML document. Specifically, it turns all flowchart elements and sub-elements into headings. Each of the 4 rules only transform one type of element. The `Flowchart2Heading` rule transforms all flowchart elements into headings. The `Action2Heading` rule transforms all action elements into headings. The `Decision2Heading` rule transforms all decision elements into headings. The `Transition2Heading` rule transforms all transition elements into headings.
 
-```
+``` etl
 //This rule transforms all flowchart elements to headings
 rule Flowchart2Heading
 	transform f : Source!Flowchart
@@ -126,7 +126,7 @@ Each of the rules defined above follow the same structure. The `transform` claus
 
 Inheritance in ETL allows you to reuse the same transformation logic for different elements. In the example below, the `Flowchart2H1` rule is abstract and is extended by the `Subflow2H1` rule. The `Subflow2H1` rule inherits the transformation logic of the `Flowchart2H1` rule and adds its transformation logic.
 
-```
+``` etl
 // If we make the following rule abstract, then only
 // subflows will be transformed.
 @abstract
@@ -154,7 +154,7 @@ When the `Flowchart2H1` rule is abstract, only subflows will be transformed and 
 
 Lazy rules are those which are invoked only if their output is requested by another rule using an equivalent operation. The intended purpose is to manage the execution of different rules, and restrict executing only those lazy rules whose output needs to be accessed by some other rule. With regards to rule priority, lazy rules are invoked after all non-lazy rules have been executed. In the example below, the `Action2Heading` and `Decision2Heading` rules are lazy and are invoked (in top-down order) after the `Flowchart2Heading` rule has been executed.
 
-```
+``` etl
 rule Flowchart2Heading
 	transform f : Source!Flowchart
 	to div : Target!DIV {
@@ -196,7 +196,7 @@ In this example, three rules have been annotated as `@lazy`. However, only 2 of 
 
 Greedy rules are executed for all instances of the input type (including sub-types). The difference between a regular rule and a greedy rule, is that a regular rule only applies to instances of the given input type and not the sub-types. Note that greedy rules are not specially prioritized during execution.
 
-```
+``` etl
 //@greedy tag allows the rule to be applicable to input type and all sub-types
 @greedy
 rule NamedElement2Heading
@@ -213,7 +213,7 @@ In the example above, the `NamedElement2Heading` rule is greedy (annotated using
 
 Primary annotated rules are used to order the results of an equivalents() operation (defined in some other rule). The results of primary rules precede other rules. In the following example, the `Transition2Heading` rule is primary and its results precede other rules.
 
-```
+``` etl
 rule Flowchart2Heading
 	transform f : Source!Flowchart
 	to contents : Target!DIV {
@@ -258,7 +258,7 @@ This ETL definition shows that the `Flowchart2Heading` rule transforms a flowcha
 
 Equivalent operation is mainly used for resolving the source elements and defining the mapping between input and output objects. When equivalents() operation is applied on a single source element, it would establish the transformation trace, invoke other rules (using the same source element) and return the newly transformed target elements. However, when equivalent() operation is applied, only the first result of the equivalents() operation is returned. When equivalent() operation is used on a collection, it returns a flattened collection instead of keeping more dimensions. In the example below, the `Flowchart2Div` rule transforms a `Flowchart` element into a `DIV` element. The `Transition2Heading` rule transforms a `Transition` element into an `H1` element. The `Flowchart2Div` rule uses the `equivalent()` operation to resolve the `Transition` elements of the `Flowchart` element.
 
-```
+``` etl
 //This rule is used to transform a Flowchart into a DIV
 rule Flowchart2Div
 	transform f : Source!Flowchart
@@ -292,7 +292,7 @@ ETL uses a special EOL operator (`::=`) to replace `equivalent()` clause as it k
 
 As the name suggests, in ETL the user can have one source element transforming to multiple target elements in one rule. All target elements are mapped to the same source element and can interact with other target elements of the rule. In the example below, the `Action2Elements` rule transforms an `Action` element into a `DIV`, `H1`, and `A` element. The `Decision2Elements` rule transforms a `Decision` element into a `DIV`, `H1`, and a sequence of `A` elements.
 
-```
+``` etl
 rule Action2Elements
 	transform a : Source!Action
 	to container : Target!DIV, title : Target!H1, link : Target!A { 

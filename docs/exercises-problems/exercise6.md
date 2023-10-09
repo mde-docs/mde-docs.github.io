@@ -54,7 +54,7 @@ That's all! Let's summarise the steps we did before. To set the value of `h1` ob
 
 Transformation class containing the MT definition. All rules are defined in the `ruleStore()`.
 
-``` groovy
+``` yamtl-groovy
 package flowchartToHtmlExamples
 
 import static yamtl.dsl.Helper.*

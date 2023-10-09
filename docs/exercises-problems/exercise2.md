@@ -40,7 +40,7 @@ You **must** create a filter block that checks if the name of the source node of
 
 Transformation class containing the MT definition. All rules are defined in the `ruleStore()`.
 
-``` groovy
+``` yamtl-groovy
 package flowchartToHtmlExamples
 import static yamtl.dsl.Rule.*
 import org.eclipse.emf.ecore.EPackage

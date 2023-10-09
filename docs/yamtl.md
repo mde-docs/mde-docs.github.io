@@ -203,7 +203,7 @@ helperStore([
 
 That is how you can create a YAMTL transformation script. For a better idea of a working MT definition check out this Groovy script for an [example](tutorials/linked-list-reversal-yamtl.md) project:
 
-```
+``` yamtl-groovy
 import static yamtl.dsl.Rule.*
 import org.eclipse.emf.ecore.EPackage
 import yamtl.core.YAMTLModule
@@ -305,7 +305,7 @@ In the code above there are four important sections:
 
 The basic format of a YAMTL rule definition is as follows:
 
-```
+``` yamtl-groovy
 rule("<name>")
     .in("<in_object_name>", <in_object_type>)
         [.derivedWith(<QUERY>)]?
@@ -365,7 +365,7 @@ A match for a rule is **valid** when it is unique, complete and all of the filte
 
 YAMTL's pattern matcher can be used to implement model queries. A model query is a rule that only has an input pattern and that may have a final action block `endWith(<ACTION>)`:
 
-```
+``` yamtl-groovy
 rule("<name>")
     .in("<in_object_name>", <in_object_type>)[.derivedWith(<QUERY>)]?[.filter(<FILTER>)]?
     .query()
@@ -599,7 +599,7 @@ To configure and execute a YAMTL module for implementing an in-place transformat
 
 YAMTL is as expressive as ATL so it also has a lot of optional operations. These options provide a more thorough (full) syntax for the language.
 
-```
+``` yamtl-groovy
 rule("<name>")
     [.inheritsFrom(<ruleNameList>)]? 
     [.isAbstract()]? 

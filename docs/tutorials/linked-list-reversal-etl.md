@@ -26,7 +26,7 @@ There are 2 aspects of the linked list which are changed from the source model t
 
 **First, the linked list's head is reversed:**
 
-``` linenums="1"
+``` etl linenums="1"
 rule LinkedList2LinkedList 
     transform s : Source!LinkedList
     to t : Target!LinkedList {
@@ -47,7 +47,7 @@ In line 7, the close curly brace (}) indicates the end of the ``body`` and the d
 
 **Second, the nodes are reversed:**
 
-``` linenums="1"
+``` etl linenums="1"
 rule Node2Node
     transform s : Source!Node
     to t : Target!Node {
@@ -63,7 +63,7 @@ The example project also includes other important files: Source model (.xmi), So
 
 ### Source and Target Metamodel
 
-```
+``` emfatic
 @namespace(uri="linkedlist", prefix="")
 package linkedlist;
 
@@ -82,7 +82,7 @@ class Node {
 
 ### Source Model
 
-```
+``` xml
 <?nsuri linkedlist?>
 <linkedlist head="N1">
     <node label="N1" next="N2"/>
@@ -92,7 +92,7 @@ class Node {
 
 ### Target Model
 
-```
+``` xml
 <?xml version="1.0" encoding="ASCII"?>
 <LinkedList
   xmi:version="2.0"
