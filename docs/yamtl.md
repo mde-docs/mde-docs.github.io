@@ -825,7 +825,7 @@ Static operations are invoked by their names and the list of arguments, specifyi
 
 === "Groovy"
 
-    ```groovy
+    ``` yamtl-groovy
     <OperationName>(["<param1>" : <value1>, ...])
     ```
 
@@ -854,7 +854,7 @@ To manage class methods, YAMTL uses `contextualOperation("<name>", <BIFUNCTION>)
 === "Groovy"
 
     ``` yamtl-groovy
-    staticOperation("<OperationName>", { obj, argMap -> 
+    contextualOperation("<OperationName>", { obj, argMap -> 
         // to access the contextual instance use 'obj' 
         // to access an argument use 'argMap.<param_name>' 
         // must return a value

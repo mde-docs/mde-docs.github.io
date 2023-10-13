@@ -1,8 +1,10 @@
-# mde-docs.github.io
+# MDE Docs
 
 MDE docs website uses [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/getting-started/) to document all the pages. To install Material MkDocs do:
-
 `pip install mkdocs-material`
+
+This project has been configured to use custom Pygments lexer plugins for [YAMTL](https://github.com/iNafey/yamtl-pygments-lexer) and [ETL](https://github.com/iNafey/pygments-epsilon). These have been installed using `pip` package installer in the `.github/workflows/ci.yml` file. Thus, you can use the syntax highlighting for all YAMTL variants and some of the Epsilon languages using their aliases (these can be found in their documentation linked above). If you want to download YAMTL Sytax Highlighter Python Package on your local machine then run:
+`pip install yamtl-pygments-lexer`
 
 This website also uses a manually installed plug-in for time stamping content. So please install the plug-in before use:
 `pip install mkdocs-git-revision-date-localized-plugin`
